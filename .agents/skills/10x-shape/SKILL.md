@@ -1,4 +1,3 @@
-```
 ---
 name: 10x-shape
 description: >
