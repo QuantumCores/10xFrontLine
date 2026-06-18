@@ -1,6 +1,0 @@
-<Solution>
-  <Folder Name="/src/" />
-  <Folder Name="/src/api/">
-    <Project Path="src/api/frontLineApi/frontLineApi.csproj" />
-  </Folder>
-</Solution>

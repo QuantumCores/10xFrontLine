@@ -1,15 +1,15 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
+/src/mbl/dist
+/src/mbl/tmp
+/src/mbl/out-tsc
+/src/mbl/bazel-out
 
 # Node
-/node_modules
-npm-debug.log
-yarn-error.log
+/src/mbl/node_modules
+/src/mbl/npm-debug.log
+/src/mbl/yarn-error.log
 
 # IDEs and editors
 .idea/
@@ -30,7 +30,7 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
-/.angular/cache
+/src/mbl/.angular/cache
 .sass-cache/
 /connect.lock
 /coverage
@@ -42,3 +42,50 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Build results
+/src/api/[Dd]ebug/
+/src/api/[Dd]ebugPublic/
+/src/api/[Rr]elease/
+/src/api/[Rr]eleases/
+/src/api/[Xx]64/
+/src/api/[Xx]86/
+/src/api/[Bb]uild/
+/src/api/bld/
+/src/api/[Bb]in/
+/src/api/obj/
+/src/api/.vs/
+
+*_i.c
+*_p.c
+*_i.h
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
