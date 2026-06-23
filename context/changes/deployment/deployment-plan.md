@@ -7,6 +7,7 @@ Deploy the ASP.NET Core API and SQL Server Express to a clean OVHcloud Ubuntu VP
 The MVP uses:
 
 - OVHcloud for the VPS and DNS.
+- Google Play Console for Android app setup, testing tracks, review, and production distribution.
 - The existing Google account for transactional email through Gmail SMTP.
 - Local SQL Server backups, with a manual copy to the developer's Windows computer after releases. No OVH Object Storage is required.
 - An independent external uptime monitor for HTTPS and certificate-expiry checks.
@@ -17,6 +18,7 @@ This document is both the execution checklist and the beginner-oriented runbook.
 
 - Commands marked **Windows PowerShell** run on the developer's Windows computer.
 - Commands marked **Ubuntu VPS** run after connecting to the server through SSH.
+- Google Play Console steps are browser UI steps. Confirm the current Google Play requirements during execution because account verification, target API level, and review requirements change over time.
 - Replace values in angle brackets, such as `<VPS_IP>` or `<DOMAIN>`, with real values. Do not type the angle brackets.
 - Run one command block at a time. Read its output before continuing.
 - `sudo` means “run as administrator.” Ubuntu asks for the current Linux user's password; typed passwords are not displayed.
@@ -31,6 +33,12 @@ This document is both the execution checklist and the beginner-oriented runbook.
 - [ ] Open the current Microsoft SQL Server on Linux support matrix and confirm which Ubuntu LTS release supports SQL Server Express.
 - [ ] Open the current SQL Server Ubuntu installation guide and record the supported SQL Server repository/version.
 - [ ] Confirm the API remains `net10.0` and will be published as self-contained `linux-x64`; the VPS therefore does not need a separately installed .NET runtime.
+- [ ] Confirm the Android app will be distributed through Google Play as an Android App Bundle produced from the Angular app through Capacitor.
+- [ ] Confirm the permanent Android package ID before creating the Play Console app. Recommended pattern: `com.<DOMAIN_WITHOUT_TLD>.frontline` or another stable reverse-DNS identifier owned by the developer. This ID cannot be reused for a different app later.
+- [ ] Confirm the Google Play developer account owner, account type, legal developer name, support email, and whether the account is Personal or Organization.
+- [ ] If the Play Console account is a Personal account created after 2023-11-13, recruit at least 12 closed-testers before the production timeline is committed because the closed-test waiting period can block release.
+- [ ] Collect Play listing inputs: app name, short description, full description, app icon, feature graphic, phone screenshots, game category, tags, support email, privacy policy URL, target countries, pricing, intended audience, content-rating answers, and app-access review instructions.
+- [ ] Decide where the public privacy policy and account/data deletion instructions will live. This can be a small static page served by Nginx on the VPS; it is not Angular web hosting.
 - [ ] Provision a clean OVH VPS with the confirmed Ubuntu release, at least 2 vCPU, 4 GB RAM, and 80 GB SSD in an EU region.
 - [ ] Record these non-secret values locally: VPS IPv4 address, Ubuntu version, OVH VPS name, SSH username, domain, intended `api.<DOMAIN>` hostname, and Google sender address.
 - [ ] Create an `A` record in OVH DNS: host `api`, target `<VPS_IP>`, default TTL.
@@ -47,6 +55,7 @@ Stop conditions:
 - If Microsoft does not support a native SQL Server edition on the available Ubuntu image, do not improvise with another repository. Re-plan the database installation or use Azure SQL.
 - If the VPS has less than 4 GB RAM, resize before installing SQL Server.
 - If DNS points somewhere else, fix DNS before requesting a certificate.
+- If the Android package ID, Play account ownership, or privacy policy URL is undecided, do not create the Play Console app yet.
 
 ### Phase 2 — First Login and Basic Ubuntu Safety
 
@@ -359,10 +368,95 @@ sudo systemctl --failed
 sudo systemctl status mssql-server nginx fail2ban frontline-api --no-pager
 ```
 
+### Phase 10 — Initialize Capacitor and Produce an Android Release Build
+
+- [ ] Add Capacitor to the Angular app. This repository currently has Angular only; Capacitor must be installed and initialized before Google Play can receive an Android build.
+
+```powershell
+cd src\mbl
+npm install @capacitor/core @capacitor/cli @capacitor/android
+npx cap init "Front Line" "<ANDROID_PACKAGE_ID>" --web-dir dist/front-line/browser
+```
+
+- [ ] If the Angular build output path differs from `dist/front-line/browser`, update `capacitor.config.*` to the actual folder that contains `index.html`.
+- [ ] Add the Android project:
+
+```powershell
+npm run build
+npx cap add android
+npx cap sync android
+```
+
+- [ ] Configure the production API base URL in the Angular build as `https://api.<DOMAIN>`. The production Android build must not point at localhost, a LAN IP, or a temporary tunnel.
+- [ ] Set the Android app name, icon, splash screen, supported orientation, package ID, minimum SDK, target SDK, and requested permissions. Remove any permission not needed by the MVP.
+- [ ] Verify the app works on a physical Android device before creating a release bundle:
+
+```powershell
+npm run build
+npx cap sync android
+npx cap run android
+```
+
+- [ ] Generate a dedicated upload keystore for Google Play. Store the keystore file and password in the password manager and offline backup. Do not commit the keystore, passwords, `key.properties`, or signing environment files.
+
+```powershell
+keytool -genkeypair -v -keystore upload-keystore.jks -alias frontline-upload -keyalg RSA -keysize 2048 -validity 10000
+```
+
+- [ ] Configure Android release signing to use the upload key. Prefer local `android/key.properties` or CI secrets; never hard-code signing material in Gradle files.
+- [ ] Accept Play App Signing in Play Console. For the MVP, use a Google-managed app signing key and keep only the upload key under developer control.
+- [ ] Set `versionCode` and `versionName` for the first release. Increment `versionCode` for every Play upload, including internal-test-only builds.
+- [ ] Build the release Android App Bundle:
+
+```powershell
+cd src\mbl\android
+.\gradlew.bat clean bundleRelease
+```
+
+Expected artifact: `src/mbl/android/app/build/outputs/bundle/release/app-release.aab`.
+
+- [ ] Archive the exact `.aab`, commit SHA, versionCode, versionName, signing-key alias, and build command in the deployment notes. Do not archive signing secrets.
+
+Stop conditions:
+
+- If Capacitor cannot produce a working local Android build, do not create a Play release.
+- If the app requests unexpected Android permissions, remove them and rebuild before upload.
+- If the upload key is lost before the first Play upload, generate a new key. If it is lost after enrollment, follow Google's upload-key reset process.
+
+### Phase 11 — Configure Google Play Console and Testing Tracks
+
+- [ ] Register or verify the Play Console developer account. Complete account type selection, developer identity verification, payment profile, and any required Android-device verification.
+- [ ] Create the app in Play Console as a game, choose free or paid before release, set the default language, add the support email, accept the required declarations, and accept Play App Signing.
+- [ ] Complete the app dashboard setup:
+  - Main store listing: app name, descriptions, icon, feature graphic, screenshots, category, tags, and contact details.
+  - Privacy policy URL and account/data deletion instructions.
+  - App access instructions for review. For passwordless login, provide a stable reviewer path such as a dedicated test email inbox or demo account flow that can receive codes during review.
+  - Data safety form based on the real implementation. Include account email, authentication identifiers, gameplay/progress data, diagnostics, analytics, crash reporting, and any sharing with Gmail/Google or other processors if present.
+  - Content rating questionnaire, target audience, ads declaration, sensitive permissions declarations, and any required policy forms.
+  - Target API level check against the current Google Play requirement.
+- [ ] Upload the first `.aab` to Internal testing. Run Play pre-launch checks and fix crashes, blocked startup, certificate/API connectivity issues, policy warnings, and Data safety mismatches.
+- [ ] Test the internal build from Google Play on a physical Android device: install from the Play testing link, request a login code, authenticate, play a match, save a result, go offline, return online, and confirm synchronization through `https://api.<DOMAIN>`.
+- [ ] If the developer account is subject to the new Personal-account requirement, create a Closed testing track with at least 12 opted-in testers for 14 continuous days before applying for production access. Keep a feedback log because Play Console asks for testing and readiness answers.
+- [ ] Apply for production access when the closed-test requirement is satisfied, if required for this account.
+- [ ] Promote the tested bundle to Production only after backend monitoring, SQL backups, privacy policy, app-access instructions, Data safety, content rating, and store listing are complete.
+- [ ] Use managed publishing or staged rollout for the first production release. Do not publish automatically from CI until a manual Play Console release has succeeded.
+- [ ] After production approval, verify install from the public Play Store page on a device not enrolled in testing.
+
+Accepted MVP limitation: Google Play release is partly manual. CI may build and archive the `.aab`, but Play Console app creation, policy declarations, production-access approval, and final rollout remain human-approved tasks.
+
+### Phase 12 — Optional Google Play Release Automation
+
+- [ ] After the first manual production release succeeds, decide whether Play uploads are worth automating.
+- [ ] If automation is useful, configure Google Play Developer API access and a least-privilege service account for upload/promote operations only.
+- [ ] Store the Play service-account JSON only as a GitHub production environment secret. Do not place it in the repository or local deployment notes.
+- [ ] Keep production rollout manual even if `.aab` upload is automated. A human must approve track promotion and rollout percentage changes.
+- [ ] Update the GitHub Actions workflow so Android release jobs run only after Angular checks pass and only for explicitly selected commits.
+
 ## Public Interfaces and Configuration
 
 - New unauthenticated endpoints: `GET /health/live` and `GET /health/ready`.
 - New application abstraction: a transactional email sender implemented with Gmail SMTP for the MVP.
+- Android distribution artifact: signed Android App Bundle (`.aab`) generated from the Capacitor Android project.
 - Production configuration namespaces:
   - `ConnectionStrings__FrontLine`
   - `Authentication__*`
@@ -370,6 +464,7 @@ sudo systemctl status mssql-server nginx fail2ban frontline-api --no-pager
   - `Cors__AllowedOrigins`
   - `PublicUrl`
 - GitHub stores deployment transport credentials only.
+- If CI builds Android release bundles, GitHub may also store Android upload-key material and optional Play Developer API credentials in the protected production environment. These secrets are separate from VPS transport credentials.
 
 ## Edge-Case Support
 
@@ -385,6 +480,11 @@ sudo systemctl status mssql-server nginx fail2ban frontline-api --no-pager
 - [ ] **Local backup fails:** block deployment, check disk space and SQL permissions, create and verify a new backup, then download it to Windows.
 - [ ] **GitHub deployment is interrupted:** leave `current` unchanged until validation completes. Investigate and remove an incomplete release only after confirming it is not active.
 - [ ] **Deployment key is exposed:** remove it from `authorized_keys`, rotate the GitHub secret, audit GitHub runs and `/var/log/auth.log`, and redeploy only from a verified commit.
+- [ ] **Android build cannot reach the API:** verify the production base URL, HTTPS certificate chain, Android network security config, CORS/auth settings, and Nginx/API logs.
+- [ ] **Play Console rejects the bundle:** check package ID, signing certificate/upload key, versionCode increment, target API level, app size, permissions, and policy warnings.
+- [ ] **Play review cannot log in:** verify the reviewer instructions, test mailbox, code delivery, rate limits, and generic authentication responses. Do not expose real user accounts.
+- [ ] **Data Safety or privacy policy is inaccurate:** block release, update the policy and Play declarations to match the app behavior, then resubmit.
+- [ ] **Closed testing requirement blocks production:** keep the app in closed testing, recruit replacement testers if needed, and wait until the required tester count has been opted in continuously for the required period.
 
 ## Acceptance Criteria
 
@@ -396,6 +496,11 @@ sudo systemctl status mssql-server nginx fail2ban frontline-api --no-pager
 - [ ] HTTPS, certificate renewal, local SQL backup, off-VPS workstation copy, test restore, and binary rollback are demonstrated.
 - [ ] External monitoring detects API failure and certificate-expiry risk.
 - [ ] The Android build authenticates and synchronizes a pending result through the production hostname.
+- [ ] Capacitor is installed and the Android project builds a signed release `.aab`.
+- [ ] The Play Console app is created with the permanent package ID, Play App Signing, privacy policy, app access instructions, Data Safety, content rating, target audience, and store listing completed.
+- [ ] Internal testing installs from Google Play and passes the login, gameplay, offline, and synchronization smoke test.
+- [ ] If the account requires closed testing, production access is approved after the required tester period.
+- [ ] The first production Play release is manually approved, reviewed by Google Play, and installable from the public listing.
 
 ## Assumptions and Accepted Risks
 
@@ -404,4 +509,19 @@ sudo systemctl status mssql-server nginx fail2ban frontline-api --no-pager
 - No OVH Object Storage or other automated remote backup service will be used for the MVP.
 - SQL backups remain on the VPS and are copied manually to the Windows development machine after deployments. This creates a deliberate recovery and human-error risk.
 - Production-only deployment is sufficient; pull requests use CI rather than a persistent staging server.
-- Version-sensitive Ubuntu, Microsoft repository, SQL Server, and Google security instructions must be checked against official documentation during execution because web verification was unavailable while revising this plan.
+- The Play Console developer account can be created or already exists, identity verification can be completed, and the one-time registration fee can be paid.
+- Google Play policy declarations are treated as release-blocking work, not paperwork after the build is done.
+- Personal Play Console accounts created after 2023-11-13 may require at least 12 closed-testers opted in for 14 continuous days before production access.
+- App review and production-access review can take days and may exceed the backend deployment timeline.
+- Version-sensitive Ubuntu, Microsoft repository, SQL Server, and Google security instructions must be checked against official documentation during execution.
+- Version-sensitive Google Play requirements, including target API level, account verification, testing tracks, Data Safety, and app review rules, must be checked against official Google documentation during execution.
+
+## Official References Checked
+
+- Google Play Console account setup: https://support.google.com/googleplay/android-developer/answer/6112435
+- Create and set up a Play Console app: https://support.google.com/googleplay/android-developer/answer/9859152
+- Play App Signing and upload keys: https://developer.android.com/studio/publish/app-signing
+- Internal, closed, and open testing tracks: https://support.google.com/googleplay/android-developer/answer/9845334
+- Personal-account testing requirements: https://support.google.com/googleplay/android-developer/answer/14151465
+- Data Safety form: https://support.google.com/googleplay/android-developer/answer/10787469
+- Target API level requirements: https://support.google.com/googleplay/android-developer/answer/11926878
