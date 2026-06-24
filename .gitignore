@@ -53,6 +53,8 @@ Thumbs.db
 *.userprefs
 
 # Build results
+bin/
+obj/
 /src/api/[Dd]ebug/
 /src/api/[Dd]ebugPublic/
 /src/api/[Rr]elease/
