@@ -415,14 +415,14 @@ The first migration creates the auth and result tables. Since there is no produc
 
 #### Automated
 
-- [x] 1.1 API solution builds: `dotnet build src/api/frontLineApi.slnx`
-- [x] 1.2 API test project is discoverable: `dotnet test src/api/frontLineApi.slnx --no-build`
-- [x] 1.3 Initial EF Core migration exists and compiles with the API project
+- [x] 1.1 API solution builds: `dotnet build src/api/frontLineApi.slnx` — ee47768
+- [x] 1.2 API test project is discoverable: `dotnet test src/api/frontLineApi.slnx --no-build` — ee47768
+- [x] 1.3 Initial EF Core migration exists and compiles with the API project — ee47768
 
 #### Manual
 
-- [x] 1.4 Configuration names match the deployment plan's intended environment variable shape
-- [x] 1.5 No secrets or real connection strings are committed
+- [x] 1.4 Configuration names match the deployment plan's intended environment variable shape — ee47768
+- [x] 1.5 No secrets or real connection strings are committed — ee47768
 
 ### Phase 2: Passwordless Auth Endpoints
 
