@@ -428,13 +428,13 @@ The first migration creates the auth and result tables. Since there is no produc
 
 #### Automated
 
-- [x] 2.1 Auth integration tests pass: `dotnet test src/api/frontLineApi.slnx --filter Auth`
-- [x] 2.2 API builds cleanly: `dotnet build src/api/frontLineApi.slnx`
+- [x] 2.1 Auth integration tests pass: `dotnet test src/api/frontLineApi.slnx --filter Auth` — f8bfd4f
+- [x] 2.2 API builds cleanly: `dotnet build src/api/frontLineApi.slnx` — f8bfd4f
 
 #### Manual
 
-- [x] 2.3 A developer can request a code locally without configuring Gmail
-- [x] 2.4 Auth endpoints never reveal whether an email already had an account
+- [x] 2.3 A developer can request a code locally without configuring Gmail — f8bfd4f
+- [x] 2.4 Auth endpoints never reveal whether an email already had an account — f8bfd4f
 
 ### Phase 3: Completed Result Write Contract
 
