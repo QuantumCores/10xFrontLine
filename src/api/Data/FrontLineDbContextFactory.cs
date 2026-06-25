@@ -8,7 +8,7 @@ public sealed class FrontLineDbContextFactory : IDesignTimeDbContextFactory<Fron
     public FrontLineDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<FrontLineDbContext>()
-            .UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=FrontLine;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true")
+            .UseSqlServer("Server=.;Database=FrontLine;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true")
             .Options;
 
         return new FrontLineDbContext(options);

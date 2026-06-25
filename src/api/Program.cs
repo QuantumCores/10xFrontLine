@@ -1,5 +1,6 @@
 
 using System.Text;
+using frontLineApi.Auth;
 using frontLineApi.Configuration;
 using frontLineApi.Data;
 using frontLineApi.Email;
@@ -21,7 +22,17 @@ public class Program
         builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
 
         builder.Services.AddDbContext<FrontLineDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("FrontLine")));
+        {
+            if (builder.Environment.IsEnvironment("Testing"))
+            {
+                options.UseInMemoryDatabase(
+                    builder.Configuration["Testing:InMemoryDatabaseName"] ?? "FrontLineTests");
+            }
+            else
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("FrontLine"));
+            }
+        });
 
         var authSection = builder.Configuration.GetSection("Authentication");
         var signingKey = authSection.GetValue<string>("SigningKey")
@@ -57,7 +68,19 @@ public class Program
         });
 
         builder.Services.AddControllers();
-        builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddScoped<IPasswordlessAuthService, PasswordlessAuthService>();
+
+        if (builder.Environment.IsProduction())
+        {
+            builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+        }
+        else
+        {
+            builder.Services.AddSingleton<CapturedEmailStore>();
+            builder.Services.AddScoped<IEmailSender, CapturingEmailSender>();
+        }
+
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
