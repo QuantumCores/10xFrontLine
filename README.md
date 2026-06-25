@@ -1,59 +1,61 @@
-# BootstrapScaffold
+# Front Line
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.1.
+Front Line is a small MVP codebase with an Angular mobile/browser client in `src/mbl` and an ASP.NET Core API in `src/api`. The current foundation slice, F-01, adds passwordless email-code authentication and a protected completed-result write contract for the first saved match flow.
 
-## Development server
+## Local Commands
 
-To start a local development server, run:
+Run API commands from the repository root:
 
-```bash
-ng serve
+```powershell
+dotnet build src/api/frontLineApi.slnx
+dotnet test src/api/frontLineApi.slnx
+dotnet run --project src/api/frontLineApi.csproj
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Run Angular commands from `src/mbl`:
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```powershell
+npm install
+npm run build
+npm test
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The API development profile listens on `http://localhost:5178`. The Angular client uses `http://localhost:5178/api` as its default API base URL and serves locally through Angular CLI, normally `http://localhost:4200`.
 
-```bash
-ng generate --help
-```
+## Auth and Result Smoke Tests
 
-## Building
+Use `src/api/frontLineApi.http` for local HTTP smoke checks:
 
-To build the project run:
+1. Run the API with `dotnet run --project src/api/frontLineApi.csproj`.
+2. Send `POST /api/auth/request-code` with an email address.
+3. Send `POST /api/auth/verify-code` with the same email and the delivered code.
+4. Paste the returned JWT into the `@token` variable.
+5. Send `POST /api/results` with a current `completedAt` timestamp.
+6. Re-send the same result body and confirm it returns success without creating a duplicate.
 
-```bash
-ng build
-```
+In non-production API environments, email delivery uses the in-memory `CapturedEmailStore` adapter so automated tests can inspect the generated message without sending real mail. Production uses the SMTP adapter and must be configured with real email settings through environment variables or another secret source. Do not commit real login codes, JWTs, SMTP passwords, or connection strings.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Configuration
 
-## Running unit tests
+Non-secret development defaults live in `src/api/appsettings.json`. Production or machine-specific values should override these keys outside source control:
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+- `ConnectionStrings:FrontLine`
+- `Authentication:Issuer`
+- `Authentication:Audience`
+- `Authentication:SigningKey`
+- `Authentication:TokenMinutes`
+- `Passwordless:CodeMinutes`
+- `Email:Host`
+- `Email:Port`
+- `Email:UseStartTls`
+- `Email:Username`
+- `Email:Password`
+- `Email:From`
+- `Cors:AllowedOrigins`
 
-```bash
-ng test
-```
+For environment variables, use ASP.NET Core double-underscore names such as `ConnectionStrings__FrontLine`, `Authentication__SigningKey`, and `Email__Password`.
 
-## Running end-to-end tests
+## Scope Boundary
 
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+F-01 only provides sign-in, token persistence, and save-only completed-result submission. Full match history, offline result queues, production deployment automation, Android packaging, and broader gameplay are owned by later roadmap slices.

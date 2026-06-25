@@ -2,6 +2,7 @@
 @email = player@example.com
 @loginCode = 000000
 @token = paste-jwt-token-here
+@completedAt = 2026-06-25T12:00:00Z
 
 ### Request passwordless sign-in code
 # @name requestCode
@@ -27,6 +28,7 @@ Content-Type: application/json
 
 ### Save completed match result
 # Replace @token above with verifyCode.response.body.token, or paste the token returned by verify-code.
+# Replace @completedAt with the current UTC time before running this request.
 # @name saveResult
 POST {{frontLineApi_HostAddress}}/api/results
 Accept: application/json
@@ -37,7 +39,7 @@ Authorization: Bearer {{token}}
   "clientMatchId": "manual-smoke-001",
   "outcome": "Victory",
   "durationSeconds": 135,
-  "completedAt": "2026-06-25T12:00:00Z",
+  "completedAt": "{{completedAt}}",
   "finalScore": 42,
   "finalFrontlinePosition": 100
 }

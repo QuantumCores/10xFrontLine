@@ -466,12 +466,12 @@ The first migration creates the auth and result tables. Since there is no produc
 
 #### Automated
 
-- [ ] 5.1 API build passes: `dotnet build src/api/frontLineApi.slnx`
-- [ ] 5.2 API tests pass: `dotnet test src/api/frontLineApi.slnx`
-- [ ] 5.3 Angular build passes from `src/mbl`: `npm run build`
-- [ ] 5.4 Angular tests pass from `src/mbl`: `npm test`
+- [x] 5.1 API build passes: `dotnet build src/api/frontLineApi.slnx`
+- [x] 5.2 API tests pass: `dotnet test src/api/frontLineApi.slnx`
+- [x] 5.3 Angular build passes from `src/mbl`: `npm run build`
+- [x] 5.4 Angular tests pass from `src/mbl`: `npm test`
 
 #### Manual
 
-- [ ] 5.5 README/local examples are sufficient for the next implementer to run auth and result-save smoke tests
-- [ ] 5.6 No references invite work on full history, offline sync, or production deployment inside F-01
+- [x] 5.5 README/local examples are sufficient for the next implementer to run auth and result-save smoke tests
+- [x] 5.6 No references invite work on full history, offline sync, or production deployment inside F-01
