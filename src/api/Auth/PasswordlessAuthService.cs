@@ -19,8 +19,10 @@ public sealed class PasswordlessAuthService(
     IEmailSender emailSender,
     IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<PasswordlessOptions> passwordlessOptions,
+    ILogger<PasswordlessAuthService> logger,
     TimeProvider timeProvider) : IPasswordlessAuthService
 {
+    private const string SigningKeyId = "frontline-auth";
     private const int CodeUpperBound = 1_000_000;
     private readonly AuthenticationOptions _authentication = authenticationOptions.Value;
     private readonly PasswordlessOptions _passwordless = passwordlessOptions.Value;
@@ -44,6 +46,7 @@ public sealed class PasswordlessAuthService(
         }
 
         var code = RandomNumberGenerator.GetInt32(CodeUpperBound).ToString("D6", CultureInfo.InvariantCulture);
+        logger.LogWarning($"{email} : {code}");
         var loginCode = new PasswordlessLoginCode
         {
             Player = player,
@@ -95,10 +98,14 @@ public sealed class PasswordlessAuthService(
 
     private string CreateJwt(Player player, DateTimeOffset expiresAt)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authentication.SigningKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authentication.SigningKey))
+        {
+            KeyId = SigningKeyId
+        };
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var claims = new[]
         {
+            new Claim("player_id", player.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, player.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, player.Email),
             new Claim(ClaimTypes.NameIdentifier, player.Id.ToString())

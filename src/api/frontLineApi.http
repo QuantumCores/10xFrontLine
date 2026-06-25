@@ -1,6 +1,45 @@
 @frontLineApi_HostAddress = http://localhost:5178
+@email = player@example.com
+@loginCode = 000000
+@token = paste-jwt-token-here
 
-GET {{frontLineApi_HostAddress}}/weatherforecast/
+### Request passwordless sign-in code
+# @name requestCode
+POST {{frontLineApi_HostAddress}}/api/auth/request-code
 Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### Verify passwordless sign-in code
+# Replace @loginCode above with the code delivered by the local dev/test email path.
+# @name verifyCode
+POST {{frontLineApi_HostAddress}}/api/auth/verify-code
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "code": "{{loginCode}}"
+}
+
+### Save completed match result
+# Replace @token above with verifyCode.response.body.token, or paste the token returned by verify-code.
+# @name saveResult
+POST {{frontLineApi_HostAddress}}/api/results
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "clientMatchId": "manual-smoke-001",
+  "outcome": "Victory",
+  "durationSeconds": 135,
+  "completedAt": "2026-06-25T12:00:00Z",
+  "finalScore": 42,
+  "finalFrontlinePosition": 100
+}
 
 ###

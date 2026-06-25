@@ -4,6 +4,7 @@ using frontLineApi.Auth;
 using frontLineApi.Configuration;
 using frontLineApi.Data;
 using frontLineApi.Email;
+using frontLineApi.Results;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,6 +13,8 @@ namespace frontLineApi;
 
 public class Program
 {
+    private const string SigningKeyId = "frontline-auth";
+
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -34,21 +37,27 @@ public class Program
             }
         });
 
-        var authSection = builder.Configuration.GetSection("Authentication");
-        var signingKey = authSection.GetValue<string>("SigningKey")
-            ?? throw new InvalidOperationException("Authentication:SigningKey is required.");
-
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+            .AddJwtBearer();
+
+        builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<Microsoft.Extensions.Options.IOptions<AuthenticationOptions>>((options, authenticationOptions) =>
             {
+                var authentication = authenticationOptions.Value;
+                var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authentication.SigningKey))
+                {
+                    KeyId = SigningKeyId
+                };
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = authSection.GetValue<string>("Issuer"),
+                    ValidIssuer = authentication.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = authSection.GetValue<string>("Audience"),
+                    ValidAudience = authentication.Audience,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+                    IssuerSigningKey = signingKey,
+                    TryAllIssuerSigningKeys = true,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromMinutes(1)
                 };
@@ -70,6 +79,7 @@ public class Program
         builder.Services.AddControllers();
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddScoped<IPasswordlessAuthService, PasswordlessAuthService>();
+        builder.Services.AddScoped<IMatchResultService, MatchResultService>();
 
         if (builder.Environment.IsProduction())
         {
