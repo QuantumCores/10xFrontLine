@@ -1,0 +1,31 @@
+<main class="auth-page">
+  <section class="auth-panel">
+    <p class="eyebrow">Front Line</p>
+    <h1>Sign in</h1>
+
+    <form (submit)="submit($event)" novalidate>
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        [formControl]="email"
+      />
+
+      @if (email.touched && email.invalid) {
+        <p class="field-error">Enter a valid email address.</p>
+      }
+
+      @if (errorMessage()) {
+        <p class="form-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" [disabled]="email.invalid || submitting()">
+        {{ submitting() ? 'Sending...' : 'Send code' }}
+      </button>
+    </form>
+
+    <a routerLink="/verify-code">I already have a code</a>
+  </section>
+</main>

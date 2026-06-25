@@ -1,0 +1,40 @@
+<main class="auth-page">
+  <section class="auth-panel">
+    <p class="eyebrow">Front Line</p>
+    <h1>Enter code</h1>
+
+    <form (submit)="submit($event)" novalidate>
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        [formControl]="email"
+      />
+
+      <label for="code">Code</label>
+      <input
+        id="code"
+        type="text"
+        autocomplete="one-time-code"
+        inputmode="numeric"
+        [formControl]="code"
+      />
+
+      @if ((email.touched && email.invalid) || (code.touched && code.invalid)) {
+        <p class="field-error">Check the email and code values.</p>
+      }
+
+      @if (errorMessage()) {
+        <p class="form-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" [disabled]="email.invalid || code.invalid || submitting()">
+        {{ submitting() ? 'Verifying...' : 'Verify' }}
+      </button>
+    </form>
+
+    <a routerLink="/sign-in">Request another code</a>
+  </section>
+</main>

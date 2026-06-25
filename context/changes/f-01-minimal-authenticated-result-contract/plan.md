@@ -453,14 +453,14 @@ The first migration creates the auth and result tables. Since there is no produc
 
 #### Automated
 
-- [ ] 4.1 Angular production build passes: `npm run build`
-- [ ] 4.2 Angular tests pass: `npm test`
-- [ ] 4.3 Client auth/result specs pass through the configured test target
+- [x] 4.1 Angular production build passes: `npm run build`
+- [x] 4.2 Angular tests pass: `npm test`
+- [x] 4.3 Client auth/result specs pass through the configured test target
 
 #### Manual
 
-- [ ] 4.4 Browser flow can request a code, verify it using the dev/test delivery path, persist the JWT, and reach a protected placeholder route
-- [ ] 4.5 Authenticated result client can submit to the local API when supplied a completed-result summary
+- [x] 4.4 Browser flow can request a code, verify it using the dev/test delivery path, persist the JWT, and reach a protected placeholder route
+- [x] 4.5 Authenticated result client can submit to the local API when supplied a completed-result summary
 
 ### Phase 5: Verification and Documentation Alignment
 

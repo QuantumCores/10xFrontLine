@@ -1,0 +1,78 @@
+:host {
+  display: block;
+}
+
+.auth-page {
+  align-items: center;
+  display: flex;
+  min-height: 100dvh;
+  padding: 24px;
+}
+
+.auth-panel {
+  margin: 0 auto;
+  max-width: 420px;
+  width: 100%;
+}
+
+.eyebrow {
+  color: #2f6b54;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: 2.35rem;
+  line-height: 1.05;
+  margin: 0 0 28px;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  font-weight: 700;
+}
+
+input {
+  border: 1px solid #b8c3bd;
+  border-radius: 8px;
+  font: inherit;
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+button {
+  background: #17362b;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 48px;
+  padding: 0 16px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+a {
+  color: #17362b;
+  display: inline-block;
+  font-weight: 700;
+  margin-top: 20px;
+}
+
+.field-error,
+.form-error {
+  color: #9e2a2b;
+  font-size: 0.9rem;
+  margin: 0;
+}

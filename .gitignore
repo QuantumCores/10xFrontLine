@@ -38,6 +38,7 @@
 testem.log
 /typings
 __screenshots__/
+.debug/
 
 # System files
 .DS_Store
