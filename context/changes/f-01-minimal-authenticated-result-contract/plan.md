@@ -440,14 +440,14 @@ The first migration creates the auth and result tables. Since there is no produc
 
 #### Automated
 
-- [x] 3.1 Result integration tests pass: `dotnet test src/api/frontLineApi.slnx --filter Results`
-- [x] 3.2 Full API tests pass: `dotnet test src/api/frontLineApi.slnx`
-- [x] 3.3 API builds cleanly: `dotnet build src/api/frontLineApi.slnx`
+- [x] 3.1 Result integration tests pass: `dotnet test src/api/frontLineApi.slnx --filter Results` — 452c385
+- [x] 3.2 Full API tests pass: `dotnet test src/api/frontLineApi.slnx` — 452c385
+- [x] 3.3 API builds cleanly: `dotnet build src/api/frontLineApi.slnx` — 452c385
 
 #### Manual
 
-- [x] 3.4 A locally issued JWT can save a result through the HTTP example or API client
-- [x] 3.5 Re-sending the same completed result does not create a duplicate row
+- [x] 3.4 A locally issued JWT can save a result through the HTTP example or API client — 452c385
+- [x] 3.5 Re-sending the same completed result does not create a duplicate row — 452c385
 
 ### Phase 4: Thin Angular Auth and Result Client
 
