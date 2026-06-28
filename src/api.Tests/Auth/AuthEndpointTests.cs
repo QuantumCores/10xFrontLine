@@ -49,6 +49,22 @@ public sealed class AuthEndpointTests
     }
 
     [Fact]
+    public async Task VerifyCodeAcceptsDifferentLetterCasing()
+    {
+        await using var factory = new AuthWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        await RequestCodeAsync(client, "player@example.com");
+        var code = GetCapturedCode(factory).ToLowerInvariant();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/auth/verify-code",
+            new VerifyCodeRequest("player@example.com", code));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task VerifyCodeRejectsInvalidCode()
     {
         await using var factory = new AuthWebApplicationFactory();
@@ -112,9 +128,9 @@ public sealed class AuthEndpointTests
     {
         var store = factory.Services.GetRequiredService<CapturedEmailStore>();
         var message = Assert.Single(store.Messages);
-        var match = Regex.Match(message.Body, @"\b\d{6}\b");
+        var match = Regex.Match(message.Body, @"\b[A-Z0-9]{8}\b");
 
-        Assert.True(match.Success, "Expected captured email body to contain a six-digit code.");
+        Assert.True(match.Success, "Expected captured email body to contain an eight-character alphanumeric code.");
         return match.Value;
     }
 }

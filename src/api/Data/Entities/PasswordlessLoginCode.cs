@@ -12,6 +12,8 @@ public sealed class PasswordlessLoginCode
 
     public string CodeHash { get; set; } = string.Empty;
 
+    public string CodeSalt { get; set; } = string.Empty;
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset ExpiresAt { get; set; }

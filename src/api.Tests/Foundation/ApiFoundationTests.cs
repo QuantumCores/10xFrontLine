@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
@@ -11,5 +12,16 @@ public sealed class ApiFoundationTests
         using var factory = new WebApplicationFactory<Program>();
 
         Assert.NotNull(factory.Server);
+    }
+
+    [Fact]
+    public void ProductionStartupRejectsPlaceholderSigningKey()
+    {
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder => builder.UseEnvironment("Production"));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => factory.Server);
+
+        Assert.Contains("Authentication:SigningKey", exception.Message);
     }
 }

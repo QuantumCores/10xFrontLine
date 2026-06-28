@@ -46,6 +46,7 @@ Non-secret development defaults live in `src/api/appsettings.json`. Production o
 - `Authentication:SigningKey`
 - `Authentication:TokenMinutes`
 - `Passwordless:CodeMinutes`
+- `Passwordless:CodePepper`
 - `Email:Host`
 - `Email:Port`
 - `Email:UseStartTls`
@@ -54,7 +55,7 @@ Non-secret development defaults live in `src/api/appsettings.json`. Production o
 - `Email:From`
 - `Cors:AllowedOrigins`
 
-For environment variables, use ASP.NET Core double-underscore names such as `ConnectionStrings__FrontLine`, `Authentication__SigningKey`, and `Email__Password`.
+For environment variables, use ASP.NET Core double-underscore names such as `ConnectionStrings__FrontLine`, `Authentication__SigningKey`, `Passwordless__CodePepper`, and `Email__Password`.
 
 ## Scope Boundary
 

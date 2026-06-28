@@ -20,6 +20,7 @@ public sealed class AuthWebApplicationFactory(int codeMinutes = 10) : WebApplica
                 ["Authentication:SigningKey"] = "test-signing-key-with-enough-entropy-for-hmac-sha256",
                 ["Authentication:TokenMinutes"] = "30",
                 ["Passwordless:CodeMinutes"] = codeMinutes.ToString(),
+                ["Passwordless:CodePepper"] = "test-code-pepper-with-enough-entropy-for-hmac-sha256",
                 ["Testing:InMemoryDatabaseName"] = _databaseName
             });
         });

@@ -26,6 +26,7 @@ public sealed class FrontLineDbContext(DbContextOptions<FrontLineDbContext> opti
             entity.HasKey(code => code.Id);
             entity.Property(code => code.Email).HasMaxLength(320).IsRequired();
             entity.Property(code => code.CodeHash).HasMaxLength(128).IsRequired();
+            entity.Property(code => code.CodeSalt).HasMaxLength(64).IsRequired();
             entity.Property(code => code.CreatedAt).IsRequired();
             entity.Property(code => code.ExpiresAt).IsRequired();
             entity.HasOne(code => code.Player)

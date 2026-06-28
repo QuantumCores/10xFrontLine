@@ -14,10 +14,12 @@ namespace frontLineApi;
 public class Program
 {
     private const string SigningKeyId = "frontline-auth";
+    private const int MinimumSigningKeyLength = 32;
 
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        ValidateProductionAuthenticationConfiguration(builder);
 
         // Add services to the container.
         builder.Services.Configure<AuthenticationOptions>(builder.Configuration.GetSection("Authentication"));
@@ -113,5 +115,23 @@ public class Program
         app.MapControllers();
 
         app.Run();
+    }
+
+    private static void ValidateProductionAuthenticationConfiguration(WebApplicationBuilder builder)
+    {
+        if (!builder.Environment.IsProduction())
+        {
+            return;
+        }
+
+        var signingKey = builder.Configuration["Authentication:SigningKey"];
+        if (string.IsNullOrWhiteSpace(signingKey) ||
+            signingKey.Length < MinimumSigningKeyLength ||
+            signingKey.Contains("development-placeholder", StringComparison.OrdinalIgnoreCase) ||
+            signingKey.Contains("change-in-production", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "Authentication:SigningKey must be configured with a non-placeholder production secret.");
+        }
     }
 }

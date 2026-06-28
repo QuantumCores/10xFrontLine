@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -20,10 +19,13 @@ public sealed class PasswordlessAuthService(
     IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<PasswordlessOptions> passwordlessOptions,
     ILogger<PasswordlessAuthService> logger,
+    IHostEnvironment hostEnvironment,
     TimeProvider timeProvider) : IPasswordlessAuthService
 {
     private const string SigningKeyId = "frontline-auth";
-    private const int CodeUpperBound = 1_000_000;
+    private const string CodeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private const int CodeLength = 8;
+    private const int CodeSaltByteCount = 32;
     private readonly AuthenticationOptions _authentication = authenticationOptions.Value;
     private readonly PasswordlessOptions _passwordless = passwordlessOptions.Value;
 
@@ -45,13 +47,19 @@ public sealed class PasswordlessAuthService(
             dbContext.Players.Add(player);
         }
 
-        var code = RandomNumberGenerator.GetInt32(CodeUpperBound).ToString("D6", CultureInfo.InvariantCulture);
-        logger.LogWarning($"{email} : {code}");
+        var code = GenerateCode();
+        var codeSalt = CreateSalt();
+        if (hostEnvironment.IsDevelopment())
+        {
+            logger.LogWarning("Development sign-in code for {Email}: {Code}", email, code);
+        }
+
         var loginCode = new PasswordlessLoginCode
         {
             Player = player,
             Email = email,
-            CodeHash = HashCode(email, code),
+            CodeHash = HashCode(email, code, codeSalt, _passwordless.CodePepper),
+            CodeSalt = codeSalt,
             CreatedAt = now,
             ExpiresAt = now.AddMinutes(Math.Max(0, _passwordless.CodeMinutes))
         };
@@ -67,7 +75,6 @@ public sealed class PasswordlessAuthService(
     public async Task<VerifyCodeResponse?> VerifyCodeAsync(VerifyCodeRequest request, CancellationToken cancellationToken)
     {
         var email = NormalizeEmail(request.Email);
-        var codeHash = HashCode(email, request.Code.Trim());
         var now = timeProvider.GetUtcNow();
 
         var loginCode = await dbContext.PasswordlessLoginCodes
@@ -79,7 +86,10 @@ public sealed class PasswordlessAuthService(
             .OrderByDescending(candidate => candidate.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (loginCode?.Player is null || !FixedTimeEquals(loginCode.CodeHash, codeHash))
+        if (loginCode?.Player is null ||
+            !FixedTimeEquals(
+                loginCode.CodeHash,
+                HashCode(email, request.Code.Trim(), loginCode.CodeSalt, _passwordless.CodePepper)))
         {
             return null;
         }
@@ -126,9 +136,33 @@ public sealed class PasswordlessAuthService(
         return email.Trim().ToLowerInvariant();
     }
 
-    private static string HashCode(string email, string code)
+    private static string CreateSalt()
     {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"{email}:{code}"));
+        return Convert.ToHexString(RandomNumberGenerator.GetBytes(CodeSaltByteCount));
+    }
+
+    private static string GenerateCode()
+    {
+        Span<char> code = stackalloc char[CodeLength];
+        for (var index = 0; index < code.Length; index++)
+        {
+            code[index] = CodeAlphabet[RandomNumberGenerator.GetInt32(CodeAlphabet.Length)];
+        }
+
+        return code.ToString();
+    }
+
+    private static string HashCode(string email, string code, string salt, string pepper)
+    {
+        if (string.IsNullOrWhiteSpace(pepper))
+        {
+            throw new InvalidOperationException("Passwordless:CodePepper must be configured.");
+        }
+
+        var normalizedCode = code.Trim().ToUpperInvariant();
+        var bytes = HMACSHA256.HashData(
+            Encoding.UTF8.GetBytes(pepper),
+            Encoding.UTF8.GetBytes($"{salt}:{email}:{normalizedCode}"));
         return Convert.ToHexString(bytes);
     }
 

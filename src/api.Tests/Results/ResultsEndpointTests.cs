@@ -135,9 +135,9 @@ public sealed class ResultsEndpointTests
     {
         var store = factory.Services.GetRequiredService<CapturedEmailStore>();
         var message = Assert.Single(store.Messages);
-        var match = Regex.Match(message.Body, @"\b\d{6}\b");
+        var match = Regex.Match(message.Body, @"\b[A-Z0-9]{8}\b");
 
-        Assert.True(match.Success, "Expected captured email body to contain a six-digit code.");
+        Assert.True(match.Success, "Expected captured email body to contain an eight-character alphanumeric code.");
         return match.Value;
     }
 }

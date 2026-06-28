@@ -1,9 +1,9 @@
 ---
 change_id: f-01-minimal-authenticated-result-contract
 title: Minimal authenticated result contract
-status: implemented
+status: impl_reviewed
 created: 2026-06-24
-updated: 2026-06-25
+updated: 2026-06-28
 archived_at: null
 ---
 
