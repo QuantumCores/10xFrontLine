@@ -443,15 +443,15 @@ No backend schema migration is expected. Capacitor initialization adds a generat
 
 #### Automated
 
-- [x] 1.1 Angular production build passes from `src/mbl`: `npm run build`
-- [x] 1.2 Capacitor sync completes from `src/mbl`: `npx cap sync android`
-- [x] 1.3 Android project is present after generation: `src/mbl/android`
+- [x] 1.1 Angular production build passes from `src/mbl`: `npm run build` — b6e075e
+- [x] 1.2 Capacitor sync completes from `src/mbl`: `npx cap sync android` — b6e075e
+- [x] 1.3 Android project is present after generation: `src/mbl/android` — b6e075e
 
 #### Manual
 
-- [x] 1.4 Developer can open or run the Android project locally with Capacitor tooling
-- [x] 1.5 Capacitor config points to the actual Angular build output and not a stale folder
-- [x] 1.6 No production signing secrets or Play Console configuration are introduced
+- [x] 1.4 Developer can open or run the Android project locally with Capacitor tooling — b6e075e
+- [x] 1.5 Capacitor config points to the actual Angular build output and not a stale folder — b6e075e
+- [x] 1.6 No production signing secrets or Play Console configuration are introduced — b6e075e
 
 ### Phase 2: Mobile Match Engine Contract
 
