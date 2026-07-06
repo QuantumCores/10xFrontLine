@@ -23,6 +23,24 @@ npm start
 
 The API development profile listens on `http://localhost:5178`. The Angular client uses `http://localhost:5178/api` as its default API base URL and serves locally through Angular CLI, normally `http://localhost:4200`.
 
+## Android Local Verification
+
+Run these commands from `src/mbl` after installing dependencies:
+
+```powershell
+npm run build
+npx cap sync android
+npx cap open android
+```
+
+To run directly on a connected Android device or emulator, use:
+
+```powershell
+npx cap run android
+```
+
+This path is for local S-01 Android verification only. Production signing, Play Console setup, and release `.aab` generation are intentionally out of scope.
+
 ## Auth and Result Smoke Tests
 
 Use `src/api/frontLineApi.http` for local HTTP smoke checks:
@@ -59,4 +77,4 @@ For environment variables, use ASP.NET Core double-underscore names such as `Con
 
 ## Scope Boundary
 
-F-01 only provides sign-in, token persistence, and save-only completed-result submission. Full match history, offline result queues, production deployment automation, Android packaging, and broader gameplay are owned by later roadmap slices.
+F-01 only provides sign-in, token persistence, and save-only completed-result submission. Full match history, offline result queues, production deployment automation, production Android release work, and broader gameplay are owned by later roadmap slices.

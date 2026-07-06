@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Front Line</string>
+    <string name="title_activity_main">Front Line</string>
+    <string name="package_name">dev.tenxfrontline.app</string>
+    <string name="custom_url_scheme">dev.tenxfrontline.app</string>
+</resources>

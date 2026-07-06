@@ -1,9 +1,9 @@
 ---
 change_id: s-01-first-saved-frontline-match
 title: Build the first saved frontline match
-status: planned
+status: implementing
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-07-06
 archived_at: null
 ---
 
