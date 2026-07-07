@@ -485,16 +485,16 @@ No backend schema migration is expected. Capacitor initialization adds a generat
 
 #### Automated
 
-- [x] 4.1 Play page specs pass from `src/mbl`: `npm test -- --include src/app/play/play-page.component.spec.ts`
-- [x] 4.2 Full Angular tests pass from `src/mbl`: `npm test`
-- [x] 4.3 Angular production build passes from `src/mbl`: `npm run build`
+- [x] 4.1 Play page specs pass from `src/mbl`: `npm test -- --include src/app/play/play-page.component.spec.ts` — de74e50
+- [x] 4.2 Full Angular tests pass from `src/mbl`: `npm test` — de74e50
+- [x] 4.3 Angular production build passes from `src/mbl`: `npm run build` — de74e50
 
 #### Manual
 
-- [x] 4.4 Signed-in user lands on the real match at `/play`
-- [x] 4.5 Anonymous user still redirects to sign-in and returns to `/play` after verification
-- [x] 4.6 Completed Victory or Defeat attempts to save once
-- [x] 4.7 Failed save shows a retry path that resends the same completed result
+- [x] 4.4 Signed-in user lands on the real match at `/play` — de74e50
+- [x] 4.5 Anonymous user still redirects to sign-in and returns to `/play` after verification — de74e50
+- [x] 4.6 Completed Victory or Defeat attempts to save once — de74e50
+- [x] 4.7 Failed save shows a retry path that resends the same completed result — de74e50
 
 ### Phase 5: Android Manual Verification and Handoff
 
