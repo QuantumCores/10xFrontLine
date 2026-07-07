@@ -1,0 +1,87 @@
+:host {
+  display: block;
+  min-block-size: 100dvh;
+}
+
+.play-page {
+  display: grid;
+  gap: 12px;
+  inline-size: min(100%, 460px);
+  margin: 0 auto;
+  min-block-size: 100dvh;
+  padding: 12px;
+}
+
+.app-chrome {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-block-size: 48px;
+}
+
+.eyebrow,
+.account,
+.save-status p {
+  margin: 0;
+}
+
+.eyebrow {
+  color: #2f6b54;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account {
+  color: #40534b;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+button {
+  background: #17362b;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-block-size: 40px;
+  padding: 0 14px;
+}
+
+.logout {
+  background: transparent;
+  border: 1px solid #8ea199;
+  color: #17362b;
+  flex: 0 0 auto;
+}
+
+.save-status {
+  align-items: center;
+  color: #17362b;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-block-size: 44px;
+}
+
+.save-status p {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+@media (max-width: 360px) {
+  .app-chrome,
+  .save-status {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .logout,
+  .save-status button {
+    inline-size: 100%;
+  }
+}

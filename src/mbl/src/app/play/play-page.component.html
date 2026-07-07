@@ -1,0 +1,22 @@
+<main class="play-page">
+  <header class="app-chrome">
+    <div>
+      <p class="eyebrow">Front Line</p>
+      <p class="account">{{ authState.player()?.email }}</p>
+    </div>
+
+    <button type="button" class="logout" (click)="logout()">Sign out</button>
+  </header>
+
+  <app-phaser-game (matchCompleted)="handleMatchCompleted($event)" />
+
+  @if (saveStatus()) {
+    <section class="save-status" aria-live="polite">
+      <p>{{ saveStatus() }}</p>
+
+      @if (saveState() === 'failed') {
+        <button type="button" (click)="retrySave()">Retry save</button>
+      }
+    </section>
+  }
+</main>

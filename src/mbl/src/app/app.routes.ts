@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 import { SignInComponent } from './auth/sign-in/sign-in.component';
 import { VerifyCodeComponent } from './auth/verify-code/verify-code.component';
 import { authGuard } from './core/auth/auth.guard';
-import { PhaserGameComponent } from './play/phaser-game.component';
+import { PlayPageComponent } from './play/play-page.component';
 
 export const routes: Routes = [
   {
@@ -16,7 +16,7 @@ export const routes: Routes = [
   },
   {
     path: 'play',
-    component: PhaserGameComponent,
+    component: PlayPageComponent,
     canActivate: [authGuard]
   },
   {
