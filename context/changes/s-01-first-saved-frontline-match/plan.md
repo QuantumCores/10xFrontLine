@@ -457,14 +457,14 @@ No backend schema migration is expected. Capacitor initialization adds a generat
 
 #### Automated
 
-- [ ] 2.1 Match engine specs pass from `src/mbl`: `npm test -- --include src/app/play/match-engine.spec.ts`
-- [ ] 2.2 Full Angular tests pass from `src/mbl`: `npm test`
-- [ ] 2.3 Type checking/build passes from `src/mbl`: `npm run build`
+- [x] 2.1 Match engine specs pass from `src/mbl`: `npm test -- --include src/app/play/match-engine.spec.ts`
+- [x] 2.2 Full Angular tests pass from `src/mbl`: `npm test`
+- [x] 2.3 Type checking/build passes from `src/mbl`: `npm run build`
 
 #### Manual
 
-- [ ] 2.4 Unit strengths/build times/NPC cadence are understandable from one config file
-- [ ] 2.5 Engine behavior matches the selected S-01 gameplay decisions: winnable with pressure, per-type held slots, pressure-reactive NPC
+- [x] 2.4 Unit strengths/build times/NPC cadence are understandable from one config file
+- [x] 2.5 Engine behavior matches the selected S-01 gameplay decisions: winnable with pressure, per-type held slots, pressure-reactive NPC
 
 ### Phase 3: Touch-First Phaser Match Surface
 
