@@ -470,16 +470,16 @@ No backend schema migration is expected. Capacitor initialization adds a generat
 
 #### Automated
 
-- [x] 3.1 Angular tests pass from `src/mbl`: `npm test`
-- [x] 3.2 Angular production build passes from `src/mbl`: `npm run build`
-- [x] 3.3 Production build stays within configured budgets
+- [x] 3.1 Angular tests pass from `src/mbl`: `npm test` — f38ba71
+- [x] 3.2 Angular production build passes from `src/mbl`: `npm run build` — f38ba71
+- [x] 3.3 Production build stays within configured budgets — f38ba71
 
 #### Manual
 
-- [x] 3.4 Phaser match appears in a mobile portrait layout with no blank canvas
-- [x] 3.5 Touching unit controls starts builds and sends held units
-- [x] 3.6 Frontline movement, build progress, held slots, and win/loss overlay are visible enough for S-01
-- [x] 3.7 Visual polish remains primitive and does not pull in S-02 scope
+- [x] 3.4 Phaser match appears in a mobile portrait layout with no blank canvas — f38ba71
+- [x] 3.5 Touching unit controls starts builds and sends held units — f38ba71
+- [x] 3.6 Frontline movement, build progress, held slots, and win/loss overlay are visible enough for S-01 — f38ba71
+- [x] 3.7 Visual polish remains primitive and does not pull in S-02 scope — f38ba71
 
 ### Phase 4: Protected Play and Result Save Integration
 
