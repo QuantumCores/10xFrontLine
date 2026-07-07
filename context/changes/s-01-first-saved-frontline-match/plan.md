@@ -457,29 +457,29 @@ No backend schema migration is expected. Capacitor initialization adds a generat
 
 #### Automated
 
-- [x] 2.1 Match engine specs pass from `src/mbl`: `npm test -- --include src/app/play/match-engine.spec.ts`
-- [x] 2.2 Full Angular tests pass from `src/mbl`: `npm test`
-- [x] 2.3 Type checking/build passes from `src/mbl`: `npm run build`
+- [x] 2.1 Match engine specs pass from `src/mbl`: `npm test -- --include src/app/play/match-engine.spec.ts` — d4180e1
+- [x] 2.2 Full Angular tests pass from `src/mbl`: `npm test` — d4180e1
+- [x] 2.3 Type checking/build passes from `src/mbl`: `npm run build` — d4180e1
 
 #### Manual
 
-- [x] 2.4 Unit strengths/build times/NPC cadence are understandable from one config file
-- [x] 2.5 Engine behavior matches the selected S-01 gameplay decisions: winnable with pressure, per-type held slots, pressure-reactive NPC
+- [x] 2.4 Unit strengths/build times/NPC cadence are understandable from one config file — d4180e1
+- [x] 2.5 Engine behavior matches the selected S-01 gameplay decisions: winnable with pressure, per-type held slots, pressure-reactive NPC — d4180e1
 
 ### Phase 3: Touch-First Phaser Match Surface
 
 #### Automated
 
-- [ ] 3.1 Angular tests pass from `src/mbl`: `npm test`
-- [ ] 3.2 Angular production build passes from `src/mbl`: `npm run build`
-- [ ] 3.3 Production build stays within configured budgets
+- [x] 3.1 Angular tests pass from `src/mbl`: `npm test`
+- [x] 3.2 Angular production build passes from `src/mbl`: `npm run build`
+- [x] 3.3 Production build stays within configured budgets
 
 #### Manual
 
-- [ ] 3.4 Phaser match appears in a mobile portrait layout with no blank canvas
-- [ ] 3.5 Touching unit controls starts builds and sends held units
-- [ ] 3.6 Frontline movement, build progress, held slots, and win/loss overlay are visible enough for S-01
-- [ ] 3.7 Visual polish remains primitive and does not pull in S-02 scope
+- [x] 3.4 Phaser match appears in a mobile portrait layout with no blank canvas
+- [x] 3.5 Touching unit controls starts builds and sends held units
+- [x] 3.6 Frontline movement, build progress, held slots, and win/loss overlay are visible enough for S-01
+- [x] 3.7 Visual polish remains primitive and does not pull in S-02 scope
 
 ### Phase 4: Protected Play and Result Save Integration
 

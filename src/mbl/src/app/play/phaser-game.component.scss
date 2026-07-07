@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  inline-size: 100%;
+}
+
+.game-host {
+  aspect-ratio: 390 / 844;
+  background: #0d1a17;
+  inline-size: min(100%, 430px);
+  margin: 0 auto;
+  max-block-size: 100dvh;
+  overflow: hidden;
+  touch-action: none;
+}

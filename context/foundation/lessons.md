@@ -8,3 +8,10 @@
 - **Problem**: Manually editing existing migrations or expanding an already-created migration breaks EF's migration history and can hide pending model changes until database update time.
 - **Rule**: Never edit an existing EF migration for a new schema change. Always use `dotnet ef` commands to add a new migration, apply it, list migrations, and verify there are no pending model changes.
 - **Applies to**: implement, impl-review
+
+## Prefix Commit Messages With QC:
+
+- **Context**: Commit creation.
+- **Problem**: All commits should have this prefix.
+- **Rule**: Always prefix commit messages with "QC:".
+- **Applies to**: implement
