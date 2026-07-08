@@ -268,7 +268,7 @@ export class FrontlineMatchScene extends Phaser.Scene {
     const detail = this.add.text(
       GAME_WIDTH / 2,
       344,
-      `Duration ${summary.durationSeconds}s\nScore ${summary.finalScore}\nResult ready to save`,
+      `Duration ${summary.durationSeconds}s\nScore ${summary.finalScore}\nResult complete`,
       {
         align: 'center',
         color: '#f4fbf6',

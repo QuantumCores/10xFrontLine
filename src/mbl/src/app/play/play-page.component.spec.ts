@@ -105,6 +105,23 @@ describe('PlayPageComponent', () => {
     expect(retryPayload.clientMatchId).toBe(firstPayload.clientMatchId);
   });
 
+  it('renders failed save retry status before the full-height game surface', () => {
+    vi.mocked(resultsApi.saveCompletedResult).mockReturnValueOnce(throwError(() => new Error('offline')));
+
+    onComplete?.(completedSummary());
+    fixture.detectChanges();
+
+    const mainChildren = Array.from(fixture.nativeElement.querySelector('main').children) as HTMLElement[];
+
+    expect(mainChildren.map((element) => element.tagName.toLowerCase())).toEqual([
+      'header',
+      'section',
+      'app-phaser-game'
+    ]);
+    expect(mainChildren[1].classList.contains('save-status')).toBe(true);
+    expect(mainChildren[1].querySelector('button')?.textContent?.trim()).toBe('Retry save');
+  });
+
   it('logs out through the existing auth service', () => {
     const router = TestBed.inject(Router);
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);

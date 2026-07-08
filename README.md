@@ -41,6 +41,41 @@ npx cap run android
 
 This path is for local S-01 Android verification only. Production signing, Play Console setup, and release `.aab` generation are intentionally out of scope.
 
+## S-01 First Match Verification
+
+Use this checklist before handing off the first saved frontline match slice.
+
+Automated checks:
+
+```powershell
+cd src/mbl
+npm test
+npm run build
+npx cap sync android
+
+cd ../..
+dotnet build src/api/frontLineApi.slnx
+dotnet test src/api/frontLineApi.slnx
+```
+
+Local API and auth prerequisites:
+
+1. Start the API from the repository root with `dotnet run --project src/api/frontLineApi.csproj`.
+2. Start the Angular app from `src/mbl` with `npm start`.
+3. Sign in through the passwordless flow before opening `/play`.
+4. Keep the API reachable to verify save success, then stop or block it before a completed result to verify save failure and retry.
+
+Android device or emulator check:
+
+```powershell
+cd src/mbl
+npx cap run android
+```
+
+If this fails with `ERR_SDK_NOT_FOUND`, install Android Studio or the Android command-line tools, then make sure the SDK path is available through `ANDROID_HOME` or `ANDROID_SDK_ROOT`, for example `C:\Users\<you>\AppData\Local\Android\Sdk`, and that platform tools such as `adb` are on `PATH`.
+
+On Android, confirm the match renders in portrait, the Phaser canvas is aligned, build/send touch targets respond where tapped, a full match can end in Victory or Defeat, and the save status can be observed. Record the device or emulator details and observations in `context/changes/s-01-first-saved-frontline-match/android-verification.md`.
+
 ## Auth and Result Smoke Tests
 
 Use `src/api/frontLineApi.http` for local HTTP smoke checks:

@@ -8,8 +8,6 @@
     <button type="button" class="logout" (click)="logout()">Sign out</button>
   </header>
 
-  <app-phaser-game (matchCompleted)="handleMatchCompleted($event)" />
-
   @if (saveStatus()) {
     <section class="save-status" aria-live="polite">
       <p>{{ saveStatus() }}</p>
@@ -19,4 +17,6 @@
       }
     </section>
   }
+
+  <app-phaser-game (matchCompleted)="handleMatchCompleted($event)" />
 </main>
