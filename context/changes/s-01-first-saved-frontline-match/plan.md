@@ -500,17 +500,17 @@ No backend schema migration is expected. Capacitor initialization adds a generat
 
 #### Automated
 
-- [x] 5.1 Angular tests pass from `src/mbl`: `npm test`
-- [x] 5.2 Angular production build passes from `src/mbl`: `npm run build`
-- [x] 5.3 Capacitor sync completes from `src/mbl`: `npx cap sync android`
-- [x] 5.4 API builds from repo root: `dotnet build src/api/frontLineApi.slnx`
-- [x] 5.5 API tests pass from repo root: `dotnet test src/api/frontLineApi.slnx`
+- [x] 5.1 Angular tests pass from `src/mbl`: `npm test` — 9ad3e80
+- [x] 5.2 Angular production build passes from `src/mbl`: `npm run build` — 9ad3e80
+- [x] 5.3 Capacitor sync completes from `src/mbl`: `npx cap sync android` — 9ad3e80
+- [x] 5.4 API builds from repo root: `dotnet build src/api/frontLineApi.slnx` — 9ad3e80
+- [x] 5.5 API tests pass from repo root: `dotnet test src/api/frontLineApi.slnx` — 9ad3e80
 
 #### Manual
 
-- [x] 5.6 Android device/emulator shows the match in portrait with aligned canvas and controls
-- [x] 5.7 Touch input lands on the intended build/send controls
-- [x] 5.8 A full match can end in Victory or Defeat and show the frozen result overlay
-- [x] 5.9 API save success is visible when the local API is reachable
-- [x] 5.10 API save failure and retry can be verified by stopping or blocking the local API during a completed result
-- [x] 5.11 `android-verification.md` records the manual Android check
+- [x] 5.6 Android device/emulator shows the match in portrait with aligned canvas and controls — 9ad3e80
+- [x] 5.7 Touch input lands on the intended build/send controls — 9ad3e80
+- [x] 5.8 A full match can end in Victory or Defeat and show the frozen result overlay — 9ad3e80
+- [x] 5.9 API save success is visible when the local API is reachable — 9ad3e80
+- [x] 5.10 API save failure and retry can be verified by stopping or blocking the local API during a completed result — 9ad3e80
+- [x] 5.11 `android-verification.md` records the manual Android check — 9ad3e80
