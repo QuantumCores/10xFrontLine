@@ -1,0 +1,28 @@
+{
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Edit|Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "npm --prefix src/mbl run lint",
+                        "statusMessage": "Running lint",
+                        "timeout": 120
+                    }
+                ]
+            },
+            {
+                "matcher": "Edit|Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "dotnet format src\\api\\frontLineApi.csproj",
+                        "statusMessage": "Running format",
+                        "timeout": 120
+                    }
+                ]
+            }
+        ]
+    }
+}
