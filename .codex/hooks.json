@@ -1,28 +1,39 @@
 {
-    "hooks": {
-        "PostToolUse": [
-            {
-                "matcher": "Edit|Write",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "npm --prefix src/mbl run lint",
-                        "statusMessage": "Running lint",
-                        "timeout": 120
-                    }
-                ]
-            },
-            {
-                "matcher": "Edit|Write",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "dotnet format src\\api\\frontLineApi.csproj",
-                        "statusMessage": "Running format",
-                        "timeout": 120
-                    }
-                ]
-            }
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$payload = [Console]::In.ReadToEnd(); Add-Content -LiteralPath .codex\\hook-debug.log -Value ('--- ' + (Get-Date -Format o)); Add-Content -LiteralPath .codex\\hook-debug.log -Value $payload\"",
+            "statusMessage": "Capturing hook payload",
+            "timeout": 10
+          }
         ]
-    }
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm --prefix src/mbl run lint",
+            "statusMessage": "Running lint",
+            "timeout": 120
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dotnet format src\\api\\frontLineApi.csproj",
+            "statusMessage": "Running format",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
 }
