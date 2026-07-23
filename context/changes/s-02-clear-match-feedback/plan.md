@@ -144,7 +144,7 @@ Show what the NPC is currently building so incoming pressure is understandable, 
 
 **Intent**: Add a compact in-canvas indicator for the NPC's currently active build.
 
-**Contract**: The display reads `snapshot.npc.activeBuild?.unitType` and maps it to the existing unit label. It shows the active NPC unit when present and a neutral waiting/idle state when absent. It does not expose NPC build progress percentage, elapsed time, or exact time remaining.
+**Contract**: The display reads `snapshot.npc.activeBuild?.unitType` and maps it to the existing unit labels across three compact NPC unit cards. The active unit card shows `BUILDING`; inactive unit cards show `WAITING`; when no NPC build is active, all three cards show `WAITING`. It does not expose NPC build progress percentage, elapsed time, or exact time remaining.
 
 #### 2. HUD layout protection
 
@@ -152,7 +152,7 @@ Show what the NPC is currently building so incoming pressure is understandable, 
 
 **Intent**: Fit NPC build visibility into the existing mobile canvas without crowding pressure, frontline, or player build controls.
 
-**Contract**: The NPC indicator remains inside the Phaser scene, uses primitive text/shape treatment consistent with the rest of S-02, and does not move result saving status into the canvas.
+**Contract**: The NPC indicator remains inside the Phaser scene, uses primitive text/shape treatment consistent with the rest of S-02, and does not move result saving status into the canvas. It replaces the redundant `Front Line` title in the top HUD band so the NPC cards fit without crowding the battlefield.
 
 ### Success Criteria:
 
@@ -295,15 +295,15 @@ No backend schema migration, API migration, auth migration, or data migration is
 
 #### Automated
 
-- [x] 3.1 Angular production build passes from `src/mbl`: `npm run build`
-- [x] 3.2 No NPC strategy or cadence changes are introduced in `src/mbl/src/app/play/match-engine.ts`
-- [x] 3.3 No NPC progress value is displayed to the player
+- [x] 3.1 Angular production build passes from `src/mbl`: `npm run build` — c804ed5
+- [x] 3.2 No NPC strategy or cadence changes are introduced in `src/mbl/src/app/play/match-engine.ts` — c804ed5
+- [x] 3.3 No NPC progress value is displayed to the player — c804ed5
 
 #### Manual
 
-- [x] 3.4 Browser check shows the NPC active unit when the NPC is building
-- [x] 3.5 Browser check shows a neutral NPC idle/waiting state when no NPC build is active
-- [x] 3.6 Android check confirms the NPC indicator remains readable and does not overlap other match UI
+- [x] 3.4 Browser check shows the NPC active unit when the NPC is building — c804ed5
+- [x] 3.5 Browser check shows a neutral NPC idle/waiting state when no NPC build is active — c804ed5
+- [x] 3.6 Android check confirms the NPC indicator remains readable and does not overlap other match UI — c804ed5
 
 ### Phase 4: Manual Verification And Handoff
 
