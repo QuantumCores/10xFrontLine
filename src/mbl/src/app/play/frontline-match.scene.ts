@@ -19,6 +19,11 @@ interface UnitControlView {
   sendLabel: Phaser.GameObjects.Text;
 }
 
+interface NpcUnitControlView {
+  card: Phaser.GameObjects.Rectangle;
+  status: Phaser.GameObjects.Text;
+}
+
 const GAME_WIDTH = 390;
 const GAME_HEIGHT = 844;
 const LANE_TOP = 76;
@@ -30,6 +35,7 @@ export class FrontlineMatchScene extends Phaser.Scene {
   private readonly onComplete: (summary: CompletedMatchSummary) => void;
   private readonly engine = new MatchEngine();
   private readonly unitControls = new Map<UnitType, UnitControlView>();
+  private readonly npcUnitControls = new Map<UnitType, NpcUnitControlView>();
   private completionEmitted = false;
   private laneGraphics?: Phaser.GameObjects.Graphics;
   private frontlineMarker?: Phaser.GameObjects.Rectangle;
@@ -65,12 +71,7 @@ export class FrontlineMatchScene extends Phaser.Scene {
   private createStaticLayout(): void {
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0d1a17);
 
-    this.add.text(20, 24, 'Front Line', {
-      color: '#f4fbf6',
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '30px',
-      fontStyle: '700'
-    });
+    this.createNpcUnitControls();
 
     this.laneGraphics = this.add.graphics();
     this.frontlineMarker = this.add.rectangle(GAME_WIDTH / 2, 0, 304, 8, 0xf5f0dc);
@@ -82,6 +83,30 @@ export class FrontlineMatchScene extends Phaser.Scene {
       fontStyle: '700'
     }).setOrigin(0.5);
 
+  }
+
+  private createNpcUnitControls(): void {
+    MATCH_UNIT_TYPES.forEach((unitType, index) => {
+      const x = 66 + index * 129;
+      const card = this.add.rectangle(x, 38, 112, 52, 0x1a2925)
+        .setStrokeStyle(2, 0x4f7f70);
+      this.add.text(x, 28, MATCH_CONFIG.units[unitType].label, {
+        align: 'center',
+        color: '#c8d8d1',
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '13px',
+        fontStyle: '700'
+      }).setOrigin(0.5);
+      const status = this.add.text(x, 49, '', {
+        align: 'center',
+        color: '#73857c',
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '10px',
+        fontStyle: '700'
+      }).setOrigin(0.5);
+
+      this.npcUnitControls.set(unitType, { card, status });
+    });
   }
 
   private createUnitControls(): void {
@@ -172,8 +197,29 @@ export class FrontlineMatchScene extends Phaser.Scene {
   }
 
   private render(snapshot: MatchSnapshot): void {
+    this.renderNpcBuild(snapshot);
     this.renderLane(snapshot);
     this.renderUnitControls(snapshot);
+  }
+
+  private renderNpcBuild(snapshot: MatchSnapshot): void {
+    const activeUnitType = snapshot.npc.activeBuild?.unitType;
+
+    MATCH_UNIT_TYPES.forEach((unitType) => {
+      const control = this.npcUnitControls.get(unitType);
+      if (!control) {
+        return;
+      }
+
+      if (unitType === activeUnitType) {
+        control.card.setFillStyle(0x3d2424).setStrokeStyle(2, 0xd98278);
+        control.status.setColor('#f4fbf6').setText('BUILDING');
+        return;
+      }
+
+      control.card.setFillStyle(0x1a2925).setStrokeStyle(2, 0x4f7f70);
+      control.status.setColor('#73857c').setText('WAITING');
+    });
   }
 
   private renderLane(snapshot: MatchSnapshot): void {

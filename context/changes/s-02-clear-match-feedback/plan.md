@@ -295,15 +295,15 @@ No backend schema migration, API migration, auth migration, or data migration is
 
 #### Automated
 
-- [ ] 3.1 Angular production build passes from `src/mbl`: `npm run build`
-- [ ] 3.2 No NPC strategy or cadence changes are introduced in `src/mbl/src/app/play/match-engine.ts`
-- [ ] 3.3 No NPC progress value is displayed to the player
+- [x] 3.1 Angular production build passes from `src/mbl`: `npm run build`
+- [x] 3.2 No NPC strategy or cadence changes are introduced in `src/mbl/src/app/play/match-engine.ts`
+- [x] 3.3 No NPC progress value is displayed to the player
 
 #### Manual
 
-- [ ] 3.4 Browser check shows the NPC active unit when the NPC is building
-- [ ] 3.5 Browser check shows a neutral NPC idle/waiting state when no NPC build is active
-- [ ] 3.6 Android check confirms the NPC indicator remains readable and does not overlap other match UI
+- [x] 3.4 Browser check shows the NPC active unit when the NPC is building
+- [x] 3.5 Browser check shows a neutral NPC idle/waiting state when no NPC build is active
+- [x] 3.6 Android check confirms the NPC indicator remains readable and does not overlap other match UI
 
 ### Phase 4: Manual Verification And Handoff
 
