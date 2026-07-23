@@ -14,15 +14,16 @@ interface UnitControlView {
   meta: Phaser.GameObjects.Text;
   status: Phaser.GameObjects.Text;
   progressFill: Phaser.GameObjects.Rectangle;
+  progressLabel: Phaser.GameObjects.Text;
   heldBadge: Phaser.GameObjects.Rectangle;
 }
 
 const GAME_WIDTH = 390;
 const GAME_HEIGHT = 844;
-const LANE_TOP = 104;
-const LANE_BOTTOM = 522;
+const LANE_TOP = 76;
+const LANE_BOTTOM = 610;
 const LANE_HEIGHT = LANE_BOTTOM - LANE_TOP;
-const CONTROL_TOP = 586;
+const CONTROL_TOP = 650;
 
 export class FrontlineMatchScene extends Phaser.Scene {
   private readonly onComplete: (summary: CompletedMatchSummary) => void;
@@ -32,9 +33,6 @@ export class FrontlineMatchScene extends Phaser.Scene {
   private laneGraphics?: Phaser.GameObjects.Graphics;
   private frontlineMarker?: Phaser.GameObjects.Rectangle;
   private frontlineText?: Phaser.GameObjects.Text;
-  private pressureText?: Phaser.GameObjects.Text;
-  private buildText?: Phaser.GameObjects.Text;
-  private messageText?: Phaser.GameObjects.Text;
   private overlay?: Phaser.GameObjects.Container;
 
   constructor(options: FrontlineMatchSceneOptions) {
@@ -73,12 +71,6 @@ export class FrontlineMatchScene extends Phaser.Scene {
       fontStyle: '700'
     });
 
-    this.pressureText = this.add.text(20, 62, '', {
-      color: '#c8d8d1',
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '15px'
-    });
-
     this.laneGraphics = this.add.graphics();
     this.frontlineMarker = this.add.rectangle(GAME_WIDTH / 2, 0, 304, 8, 0xf5f0dc);
     this.frontlineText = this.add.text(0, 0, '', {
@@ -89,29 +81,6 @@ export class FrontlineMatchScene extends Phaser.Scene {
       fontStyle: '700'
     }).setOrigin(0.5);
 
-    this.add.text(24, LANE_TOP - 26, 'NPC boundary', {
-      color: '#ffb0a4',
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '13px'
-    });
-    this.add.text(24, LANE_BOTTOM + 12, 'Player boundary', {
-      color: '#9fd6ff',
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '13px'
-    });
-
-    this.buildText = this.add.text(20, 548, '', {
-      color: '#f4fbf6',
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '16px',
-      fontStyle: '700'
-    });
-    this.messageText = this.add.text(20, 806, 'Build a unit. Hold one completed unit per type. Tap held units to send.', {
-      color: '#c8d8d1',
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '13px',
-      wordWrap: { width: 350 }
-    });
   }
 
   private createUnitControls(): void {
@@ -135,8 +104,17 @@ export class FrontlineMatchScene extends Phaser.Scene {
         fontSize: '12px',
         lineSpacing: 3
       }).setOrigin(0.5, 0);
-      this.add.rectangle(x, CONTROL_TOP + 96, 82, 9, 0x0d1a17).setOrigin(0.5);
-      const progressFill = this.add.rectangle(x - 41, CONTROL_TOP + 96, 0, 9, 0x75c986).setOrigin(0, 0.5);
+      this.add.rectangle(x, CONTROL_TOP + 96, 82, 18, 0x0d1a17).setOrigin(0.5);
+      const progressFill = this.add.rectangle(x - 41, CONTROL_TOP + 96, 82, 18, 0x75c986)
+        .setOrigin(0, 0.5)
+        .setScale(0, 1);
+      const progressLabel = this.add.text(x, CONTROL_TOP + 96, '', {
+        align: 'center',
+        color: '#f4fbf6',
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '10px',
+        fontStyle: '700'
+      }).setOrigin(0.5);
       const heldBadge = this.add.rectangle(x, CONTROL_TOP + 115, 72, 20, 0x375a84).setOrigin(0.5).setVisible(false);
       const status = this.add.text(x, CONTROL_TOP + 108, '', {
         align: 'center',
@@ -156,6 +134,7 @@ export class FrontlineMatchScene extends Phaser.Scene {
         meta,
         status,
         progressFill,
+        progressLabel,
         heldBadge
       });
     });
@@ -168,31 +147,20 @@ export class FrontlineMatchScene extends Phaser.Scene {
     }
 
     if (snapshot.heldUnits[unitType]) {
-      const result = this.engine.sendHeldUnit(unitType);
-      this.setMessage(result.accepted ? `${MATCH_CONFIG.units[unitType].label} sent.` : 'No unit ready to send.');
+      this.engine.sendHeldUnit(unitType);
       this.render(this.engine.getSnapshot());
       return;
     }
 
     const result = this.engine.startBuild(unitType);
     if (result.accepted) {
-      this.setMessage(`${MATCH_CONFIG.units[unitType].label} building.`);
       this.render(this.engine.getSnapshot());
       return;
     }
-
-    const messages: Record<NonNullable<typeof result.reason>, string> = {
-      'already-building': 'Finish the active build before starting another.',
-      'held-slot-occupied': 'Send the held unit before building another of that type.',
-      'match-complete': 'The match is complete.',
-      'unknown-unit': 'Unknown unit.'
-    };
-    this.setMessage(messages[result.reason ?? 'unknown-unit']);
   }
 
   private render(snapshot: MatchSnapshot): void {
     this.renderLane(snapshot);
-    this.renderHud(snapshot);
     this.renderUnitControls(snapshot);
   }
 
@@ -200,6 +168,8 @@ export class FrontlineMatchScene extends Phaser.Scene {
     const markerY = this.frontlineY(snapshot.frontlinePosition);
     const laneLeft = 52;
     const laneWidth = 286;
+    const pressureColor = this.getPressureColor(snapshot.pressure);
+    const labelY = Phaser.Math.Clamp(markerY - 24, LANE_TOP + 20, LANE_BOTTOM - 20);
 
     this.laneGraphics?.clear();
     this.laneGraphics?.fillStyle(0x341c1c, 1);
@@ -211,23 +181,10 @@ export class FrontlineMatchScene extends Phaser.Scene {
     this.laneGraphics?.lineStyle(1, 0xc8d8d1, 0.35);
     this.laneGraphics?.lineBetween(laneLeft, LANE_TOP + LANE_HEIGHT / 2, laneLeft + laneWidth, LANE_TOP + LANE_HEIGHT / 2);
 
-    this.frontlineMarker?.setY(markerY);
-    this.frontlineText?.setPosition(GAME_WIDTH / 2, markerY - 24);
-    this.frontlineText?.setText(`Frontline ${Math.round(snapshot.frontlinePosition)}%`);
-  }
-
-  private renderHud(snapshot: MatchSnapshot): void {
-    this.pressureText?.setText(
-      `Pressure ${snapshot.pressure} | Player ${snapshot.playerPressure} vs NPC ${snapshot.npcPressure}`
-    );
-
-    if (snapshot.playerActiveBuild) {
-      const unit = MATCH_CONFIG.units[snapshot.playerActiveBuild.unitType];
-      this.buildText?.setText(`Building ${unit.label}: ${Math.round(snapshot.playerActiveBuild.progress * 100)}%`);
-      return;
-    }
-
-    this.buildText?.setText('No active build');
+    this.frontlineMarker?.setY(markerY).setFillStyle(pressureColor);
+    this.frontlineText?.setPosition(GAME_WIDTH / 2, labelY);
+    this.frontlineText?.setColor('#f4fbf6');
+    this.frontlineText?.setText(`Pressure ${snapshot.pressure}`);
   }
 
   private renderUnitControls(snapshot: MatchSnapshot): void {
@@ -241,7 +198,8 @@ export class FrontlineMatchScene extends Phaser.Scene {
       const held = snapshot.heldUnits[unitType];
       const progress = isBuilding ? snapshot.playerActiveBuild?.progress ?? 0 : held ? 1 : 0;
 
-      control.progressFill.setDisplaySize(82 * progress, 9);
+      control.progressFill.setScale(progress, 1);
+      control.progressLabel.setText(isBuilding ? `${Math.round(progress * 100)}%` : '');
       control.heldBadge.setVisible(Boolean(held));
       control.card.setFillStyle(held ? 0x23588a : isBuilding ? 0x23593a : 0x19352f);
       control.title.setColor(snapshot.completion ? '#91a39a' : '#f4fbf6');
@@ -279,15 +237,22 @@ export class FrontlineMatchScene extends Phaser.Scene {
     ).setOrigin(0.5);
 
     this.overlay = this.add.container(0, 0, [panel, title, detail]);
-    this.setMessage('Match complete. The Angular page will handle result saving.');
-  }
-
-  private setMessage(message: string): void {
-    this.messageText?.setText(message);
   }
 
   private frontlineY(position: number): number {
     const normalized = Phaser.Math.Clamp(position, 0, 100) / 100;
     return LANE_BOTTOM - normalized * LANE_HEIGHT;
+  }
+
+  private getPressureColor(pressure: number): number {
+    if (pressure > 0) {
+      return 0x63b3ff;
+    }
+
+    if (pressure < 0) {
+      return 0xff756b;
+    }
+
+    return 0xf4fbf6;
   }
 }

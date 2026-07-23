@@ -265,15 +265,15 @@ No backend schema migration, API migration, auth migration, or data migration is
 
 #### Automated
 
-- [ ] 1.1 Angular production build passes from `src/mbl`: `npm run build`
-- [ ] 1.2 No new engine contract is introduced in `src/mbl/src/app/play/match-types.ts`
-- [ ] 1.3 No new test files are added for S-02
+- [x] 1.1 Angular production build passes from `src/mbl`: `npm run build`
+- [x] 1.2 No new engine contract is introduced in `src/mbl/src/app/play/match-types.ts`
+- [x] 1.3 No new test files are added for S-02
 
 #### Manual
 
-- [ ] 1.4 Browser viewport check shows blue when player pressure is positive, white when pressure is neutral or holding, and red when pressure is negative
-- [ ] 1.5 Frontline marker, lane, and labels are readable at mobile portrait size
-- [ ] 1.6 Pressure clarity improves without relying only on raw numbers
+- [x] 1.4 Browser viewport check shows blue when player pressure is positive, white when pressure is neutral or holding, and red when pressure is negative
+- [x] 1.5 Frontline marker, lane, and labels are readable at mobile portrait size
+- [x] 1.6 Pressure clarity improves without relying only on raw numbers
 
 ### Phase 2: Build And Send State Clarity
 
