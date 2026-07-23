@@ -184,7 +184,9 @@ export class FrontlineMatchScene extends Phaser.Scene {
     this.frontlineMarker?.setY(markerY).setFillStyle(pressureColor);
     this.frontlineText?.setPosition(GAME_WIDTH / 2, labelY);
     this.frontlineText?.setColor('#f4fbf6');
-    this.frontlineText?.setText(`Pressure ${snapshot.pressure}`);
+    this.frontlineText?.setText(
+      `Pressure ${snapshot.pressure} | Frontline ${Math.round(snapshot.frontlinePosition)}%`
+    );
   }
 
   private renderUnitControls(snapshot: MatchSnapshot): void {

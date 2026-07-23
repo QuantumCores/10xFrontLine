@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implement S-02 as a focused gameplay readability pass over the implemented S-01 match. The player should be able to read the match at a glance: whether the frontline is pushing, holding, or under pressure; which unit cards are buildable, building, ready, or sendable; and what unit the NPC is currently preparing.
+Implement S-02 as a focused gameplay readability pass over the implemented S-01 match. The player should be able to read the match at a glance from the frontline marker color and compact pressure label, understand which unit cards are buildable, building, ready, or sendable, and see what unit the NPC is currently preparing.
 
 ## Current State Analysis
 
@@ -10,7 +10,7 @@ S-01 is implemented and verified: `/play` hosts a Phaser match scene, the pure T
 
 ## Desired End State
 
-During a match, the player can understand the current pressure state without reading raw numbers first. The lane/frontline uses clear blue, white, and red visual states for pushing, holding, and under pressure. Unit cards keep the one-tap interaction from S-01 but make `BUILD`, `BUILDING`, `READY`, and `SEND` visually distinct. The NPC's active build unit is visible, but its build progress is not shown. No engine behavior, result persistence, offline sync, restart flow, or backend contract changes are introduced.
+During a match, the player can understand the current pressure state from a frontline marker that turns blue, white, or red and a compact `Pressure <P> | Frontline <N>%` label. The battlefield uses the space reclaimed by removing boundary labels and separate pressure, build-status, and transient-message text. Unit cards keep the one-tap interaction from S-01, show build progress inside the existing bar below build time, and make `BUILD`, `BUILDING`, `READY`, `SEND`, and unavailable states visually distinct. The NPC's active build unit is visible, but its build progress is not shown. No engine behavior, result persistence, offline sync, restart flow, or backend contract changes are introduced.
 
 ### Key Discoveries:
 
@@ -26,6 +26,7 @@ During a match, the player can understand the current pressure state without rea
 
 - No new gameplay rules, balance changes, unit types, NPC strategy changes, or engine contract changes.
 - No transient feedback events, activity log, message stack, or explicit engine event stream.
+- No separate top pressure summary, boundary labels, active-build status line, or bottom transient-message line inside the match canvas.
 - No new automated tests in this story; dedicated test coverage is deferred to a later story.
 - No backend/API changes, result persistence changes, match history changes, or durable offline sync.
 - No restart or play-again flow; S-04 owns restart after a completed match.
@@ -39,7 +40,7 @@ Keep S-02 concentrated in the Phaser scene. Use the existing `MatchSnapshot` to 
 
 ### User experience spec
 
-Pressure state should be mostly visual: blue means the player is pushing, white means holding, and red means under pressure. Numeric pressure can remain available as secondary information, but the color/state treatment is the main player-facing signal.
+Pressure state should be mostly visual: the frontline marker is blue when the player is pushing, white when holding, and red when under pressure. The nearby neutral label reads `Pressure <P> | Frontline <N>%`. The lane keeps its fixed red and blue territory fills; pressure does not tint the full battlefield.
 
 ### State sequencing
 
@@ -57,9 +58,9 @@ Make the lane/frontline communicate pressure direction and risk visually, withou
 
 **File**: `src/mbl/src/app/play/frontline-match.scene.ts`
 
-**Intent**: Replace the raw-number-first pressure presentation with a clear visual state for pushing, holding, or under pressure.
+**Intent**: Pair a compact numeric label with a clear marker state for pushing, holding, or under pressure.
 
-**Contract**: The scene derives pressure state from `snapshot.pressure`. Positive pressure maps to the player pushing with blue treatment, near-zero pressure maps to holding with white treatment, and negative pressure maps to under pressure with red treatment. Any numeric pressure text is secondary and must not be the only cue.
+**Contract**: The scene derives pressure state from `snapshot.pressure`. Positive pressure maps the frontline marker to blue, zero pressure maps it to white, and negative pressure maps it to red. The nearby label reads `Pressure <P> | Frontline <N>%`, using `snapshot.pressure` and `snapshot.frontlinePosition`. Marker color remains the non-numeric pressure cue.
 
 #### 2. Lane and marker clarity
 
@@ -67,7 +68,7 @@ Make the lane/frontline communicate pressure direction and risk visually, withou
 
 **Intent**: Make the frontline position and pressure direction readable from the lane itself.
 
-**Contract**: Lane fills, marker color, and nearby label treatment match the pressure state. Boundary labels remain readable in the existing 390x844 logical canvas and do not overlap unit controls or the completion overlay.
+**Contract**: The lane retains fixed red and blue territory fills while only the frontline marker changes with pressure state. Remove the NPC boundary label, player boundary label, separate top pressure summary, active-build status line, and bottom transient-message line. Use the reclaimed vertical space to enlarge the battlefield within the existing 390x844 logical canvas without overlapping unit controls or the completion overlay.
 
 ### Success Criteria:
 
@@ -80,7 +81,7 @@ Make the lane/frontline communicate pressure direction and risk visually, withou
 #### Manual Verification:
 
 - Browser viewport check shows blue when player pressure is positive, white when pressure is neutral or holding, and red when pressure is negative
-- Frontline marker, lane, and labels are readable at mobile portrait size
+- Frontline marker, enlarged lane, and `Pressure <P> | Frontline <N>%` label are readable at mobile portrait size
 - Pressure clarity improves without relying only on raw numbers
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
@@ -101,7 +102,7 @@ Refine the existing one-card-per-unit controls so their states are easy to disti
 
 **Intent**: Keep the one-tap S-01 interaction while making each card's state obvious.
 
-**Contract**: Each unit card visibly distinguishes idle/buildable, currently building, completed/ready, and sendable state. `BUILD`, `BUILDING`, `READY`, and `SEND` states may be represented by text plus color/shape treatment, but the tap target remains the existing card-level interaction.
+**Contract**: Each unit card visibly distinguishes idle/buildable, currently building, completed/ready, sendable, and temporarily unavailable states. While one unit is building, other cards must not misleadingly appear buildable or silently accept a rejected build attempt. `BUILD`, `BUILDING`, `READY`, and `SEND` states may be represented by text plus color/shape treatment, but the tap target remains the existing card-level interaction.
 
 #### 2. Build progress readability
 
@@ -109,7 +110,7 @@ Refine the existing one-card-per-unit controls so their states are easy to disti
 
 **Intent**: Improve active build progress so the player can read what is being built and how far along it is without hunting across the HUD and cards.
 
-**Contract**: The active build state remains driven by `snapshot.playerActiveBuild.progress`. Progress indicators keep stable dimensions and do not shift card layout as percentages change.
+**Contract**: The active build state remains driven by `snapshot.playerActiveBuild.progress`. Display the active percentage inside the existing progress bar below the unit build time. The bar keeps stable dimensions and does not shift card layout as percentages change. Do not restore a separate `No active build` / `Building <U> <N>%` status line or bottom build/send message line.
 
 ### Success Criteria:
 
@@ -121,7 +122,7 @@ Refine the existing one-card-per-unit controls so their states are easy to disti
 
 #### Manual Verification:
 
-- A player can tell which card can start a build, which one is building, and which completed unit can be sent
+- A player can tell which card can start a build, which one is building, which cards are temporarily unavailable, and which completed unit can be sent
 - Unit cards remain tappable and aligned in browser and mobile portrait layout
 - Building and sending behavior remains the same as S-01
 
@@ -229,12 +230,13 @@ Verify S-02 as a readability slice in browser and Android, then update the chang
 
 1. Start the Angular app and sign in through the existing flow.
 2. Open `/play` in a mobile-sized browser viewport.
-3. Build and send enough player units to create positive pressure; confirm blue pushing treatment.
-4. Let pressure return near neutral or tune play to a holding state; confirm white holding treatment.
-5. Let NPC pressure exceed player pressure; confirm red under-pressure treatment.
-6. Confirm unit cards distinguish buildable, building, ready, and sendable states while preserving one-tap interaction.
-7. Wait for an NPC build to start and confirm the NPC active unit is visible without progress.
-8. Build the Angular app, sync Capacitor, and repeat the readability/touch checks on Android emulator or device.
+3. Build and send enough player units to create positive pressure; confirm the frontline marker turns blue.
+4. Let pressure return to zero; confirm the frontline marker turns white.
+5. Let NPC pressure exceed player pressure; confirm the frontline marker turns red.
+6. Confirm the nearby label reads `Pressure <P> | Frontline <N>%` and no removed boundary, pressure-summary, active-build, or transient-message text returns.
+7. Confirm unit cards distinguish buildable, building, unavailable, ready, and sendable states while preserving one-tap interaction, with active progress shown inside the bar below build time.
+8. Wait for an NPC build to start and confirm the NPC active unit is visible without progress.
+9. Build the Angular app, sync Capacitor, and repeat the readability/touch checks on Android emulator or device.
 
 ## Performance Considerations
 
@@ -265,15 +267,15 @@ No backend schema migration, API migration, auth migration, or data migration is
 
 #### Automated
 
-- [x] 1.1 Angular production build passes from `src/mbl`: `npm run build`
-- [x] 1.2 No new engine contract is introduced in `src/mbl/src/app/play/match-types.ts`
-- [x] 1.3 No new test files are added for S-02
+- [x] 1.1 Angular production build passes from `src/mbl`: `npm run build` — e8d6909
+- [x] 1.2 No new engine contract is introduced in `src/mbl/src/app/play/match-types.ts` — e8d6909
+- [x] 1.3 No new test files are added for S-02 — e8d6909
 
 #### Manual
 
-- [x] 1.4 Browser viewport check shows blue when player pressure is positive, white when pressure is neutral or holding, and red when pressure is negative
-- [x] 1.5 Frontline marker, lane, and labels are readable at mobile portrait size
-- [x] 1.6 Pressure clarity improves without relying only on raw numbers
+- [x] 1.4 Browser viewport check shows blue when player pressure is positive, white when pressure is neutral or holding, and red when pressure is negative — e8d6909
+- [x] 1.5 Frontline marker, lane, and labels are readable at mobile portrait size — e8d6909
+- [x] 1.6 Pressure clarity improves without relying only on raw numbers — e8d6909
 
 ### Phase 2: Build And Send State Clarity
 
