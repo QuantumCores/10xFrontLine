@@ -281,15 +281,15 @@ No backend schema migration, API migration, auth migration, or data migration is
 
 #### Automated
 
-- [ ] 2.1 Angular production build passes from `src/mbl`: `npm run build`
-- [ ] 2.2 No separate build/send controls are introduced
-- [ ] 2.3 No auto-send behavior is introduced
+- [x] 2.1 Angular production build passes from `src/mbl`: `npm run build`
+- [x] 2.2 No separate build/send controls are introduced
+- [x] 2.3 No auto-send behavior is introduced
 
 #### Manual
 
-- [ ] 2.4 A player can tell which card can start a build, which one is building, and which completed unit can be sent
-- [ ] 2.5 Unit cards remain tappable and aligned in browser and mobile portrait layout
-- [ ] 2.6 Building and sending behavior remains the same as S-01
+- [x] 2.4 A player can tell which card can start a build, which one is building, and which completed unit can be sent
+- [x] 2.5 Unit cards remain tappable and aligned in browser and mobile portrait layout
+- [x] 2.6 Building and sending behavior remains the same as S-01
 
 ### Phase 3: NPC Active Build Visibility
 

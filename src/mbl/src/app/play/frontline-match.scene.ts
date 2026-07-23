@@ -16,6 +16,7 @@ interface UnitControlView {
   progressFill: Phaser.GameObjects.Rectangle;
   progressLabel: Phaser.GameObjects.Text;
   heldBadge: Phaser.GameObjects.Rectangle;
+  sendLabel: Phaser.GameObjects.Text;
 }
 
 const GAME_WIDTH = 390;
@@ -104,29 +105,39 @@ export class FrontlineMatchScene extends Phaser.Scene {
         fontSize: '12px',
         lineSpacing: 3
       }).setOrigin(0.5, 0);
-      this.add.rectangle(x, CONTROL_TOP + 96, 82, 18, 0x0d1a17).setOrigin(0.5);
-      const progressFill = this.add.rectangle(x - 41, CONTROL_TOP + 96, 82, 18, 0x75c986)
+      this.add.rectangle(x, CONTROL_TOP + 92, 82, 18, 0x0d1a17)
+        .setStrokeStyle(1, 0x4f7f70)
+        .setOrigin(0.5);
+      const progressFill = this.add.rectangle(x - 41, CONTROL_TOP + 92, 82, 18, 0x75c986)
         .setOrigin(0, 0.5)
         .setScale(0, 1);
-      const progressLabel = this.add.text(x, CONTROL_TOP + 96, '', {
+      const progressLabel = this.add.text(x, CONTROL_TOP + 92, '', {
         align: 'center',
         color: '#f4fbf6',
         fontFamily: 'Arial, sans-serif',
         fontSize: '10px',
         fontStyle: '700'
       }).setOrigin(0.5);
-      const heldBadge = this.add.rectangle(x, CONTROL_TOP + 115, 72, 20, 0x375a84).setOrigin(0.5).setVisible(false);
       const status = this.add.text(x, CONTROL_TOP + 108, '', {
         align: 'center',
         color: '#f4fbf6',
         fontFamily: 'Arial, sans-serif',
-        fontSize: '12px',
+        fontSize: '11px',
         fontStyle: '700'
-      }).setOrigin(0.5, 0);
+      }).setOrigin(0.5);
+      const heldBadge = this.add.rectangle(x, CONTROL_TOP + 126, 72, 20, 0x2f75b5)
+        .setStrokeStyle(1, 0x9bd2ff)
+        .setOrigin(0.5)
+        .setVisible(false);
+      const sendLabel = this.add.text(x, CONTROL_TOP + 126, 'SEND', {
+        align: 'center',
+        color: '#f4fbf6',
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '11px',
+        fontStyle: '700'
+      }).setOrigin(0.5).setVisible(false);
 
       card.on('pointerdown', () => this.handleUnitTap(unitType));
-      heldBadge.setInteractive({ useHandCursor: true });
-      heldBadge.on('pointerdown', () => this.handleUnitTap(unitType));
 
       this.unitControls.set(unitType, {
         card,
@@ -135,7 +146,8 @@ export class FrontlineMatchScene extends Phaser.Scene {
         status,
         progressFill,
         progressLabel,
-        heldBadge
+        heldBadge,
+        sendLabel
       });
     });
   }
@@ -197,17 +209,44 @@ export class FrontlineMatchScene extends Phaser.Scene {
       }
 
       const isBuilding = snapshot.playerActiveBuild?.unitType === unitType;
+      const anotherUnitIsBuilding = Boolean(snapshot.playerActiveBuild) && !isBuilding;
       const held = snapshot.heldUnits[unitType];
-      const progress = isBuilding ? snapshot.playerActiveBuild?.progress ?? 0 : held ? 1 : 0;
+      const isComplete = Boolean(snapshot.completion);
+      const isSendable = Boolean(held) && !isComplete;
+      const isBuildable = !isComplete && !snapshot.playerActiveBuild && !held;
+      const progress = isBuilding ? snapshot.playerActiveBuild?.progress ?? 0 : 0;
 
       control.progressFill.setScale(progress, 1);
       control.progressLabel.setText(isBuilding ? `${Math.round(progress * 100)}%` : '');
-      control.heldBadge.setVisible(Boolean(held));
-      control.card.setFillStyle(held ? 0x23588a : isBuilding ? 0x23593a : 0x19352f);
-      control.title.setColor(snapshot.completion ? '#91a39a' : '#f4fbf6');
-      control.meta.setColor(snapshot.completion ? '#91a39a' : '#c8d8d1');
-      control.status.setText(held ? 'SEND' : isBuilding ? 'BUILDING' : 'BUILD');
+      control.heldBadge.setVisible(isSendable);
+      control.sendLabel.setVisible(isSendable);
+      control.card.input!.enabled = isBuildable || isSendable;
+
+      if (isComplete) {
+        this.setUnitControlState(control, 'MATCH OVER', 0x17231f, 0x405149, '#73857c');
+      } else if (isSendable) {
+        this.setUnitControlState(control, 'READY', 0x173f63, 0x63b3ff, '#f4fbf6');
+      } else if (isBuilding) {
+        this.setUnitControlState(control, 'BUILDING', 0x23593a, 0x75c986, '#f4fbf6');
+      } else if (anotherUnitIsBuilding) {
+        this.setUnitControlState(control, 'UNAVAILABLE', 0x17231f, 0x405149, '#73857c');
+      } else {
+        this.setUnitControlState(control, 'BUILD', 0x19352f, 0x75c986, '#f4fbf6');
+      }
     });
+  }
+
+  private setUnitControlState(
+    control: UnitControlView,
+    status: string,
+    fillColor: number,
+    strokeColor: number,
+    textColor: string
+  ): void {
+    control.card.setFillStyle(fillColor).setStrokeStyle(2, strokeColor);
+    control.title.setColor(textColor);
+    control.meta.setColor(textColor === '#f4fbf6' ? '#c8d8d1' : textColor);
+    control.status.setColor(textColor).setText(status);
   }
 
   private showCompletion(summary: CompletedMatchSummary): void {
