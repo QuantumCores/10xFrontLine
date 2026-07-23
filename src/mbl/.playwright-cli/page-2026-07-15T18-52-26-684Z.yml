@@ -1,0 +1,11 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - paragraph [ref=e6]: Front Line
+    - heading "Sign in" [level=1] [ref=e7]
+    - generic [ref=e8]:
+      - generic [ref=e9]: Email
+      - textbox "Email" [ref=e10]: manual-test@example.com
+      - alert [ref=e13]: Unable to request a sign-in code. Try again.
+      - button "Send code" [ref=e11] [cursor=pointer]
+    - link "I already have a code" [ref=e12] [cursor=pointer]:
+      - /url: /verify-code

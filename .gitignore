@@ -92,3 +92,4 @@ obj/
 *.pidb
 *.svclog
 *.scc
+src/mbl/auth.json
