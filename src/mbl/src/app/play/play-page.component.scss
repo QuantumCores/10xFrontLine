@@ -4,12 +4,19 @@
 }
 
 .play-page {
-  display: grid;
+  block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   inline-size: min(100%, 460px);
   margin: 0 auto;
-  min-block-size: 100dvh;
+  min-block-size: 0;
   padding: 12px;
+}
+
+app-phaser-game {
+  flex: 1 1 auto;
+  min-block-size: 0;
 }
 
 .app-chrome {

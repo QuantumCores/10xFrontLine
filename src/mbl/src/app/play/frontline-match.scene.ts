@@ -27,9 +27,9 @@ interface NpcUnitControlView {
 const GAME_WIDTH = 390;
 const GAME_HEIGHT = 844;
 const LANE_TOP = 76;
-const LANE_BOTTOM = 610;
+const LANE_BOTTOM = 658;
 const LANE_HEIGHT = LANE_BOTTOM - LANE_TOP;
-const CONTROL_TOP = 650;
+const CONTROL_TOP = 682;
 
 export class FrontlineMatchScene extends Phaser.Scene {
   private readonly onComplete: (summary: CompletedMatchSummary) => void;
