@@ -309,14 +309,14 @@ No backend schema migration, API migration, auth migration, or data migration is
 
 #### Automated
 
-- [x] 4.1 Angular production build passes from `src/mbl`: `npm run build`
-- [x] 4.2 Existing Angular test suite passes from `src/mbl` if run as a regression check: `npm test`
-- [x] 4.3 Capacitor sync completes from `src/mbl` before Android verification: `npx cap sync android`
+- [x] 4.1 Angular production build passes from `src/mbl`: `npm run build` — bfe708e
+- [x] 4.2 Existing Angular test suite passes from `src/mbl` if run as a regression check: `npm test` — bfe708e
+- [x] 4.3 Capacitor sync completes from `src/mbl` before Android verification: `npx cap sync android` — bfe708e
 
 #### Manual
 
-- [x] 4.4 Browser manual check confirms pushing/holding/under-pressure states use blue/white/red visual treatment
-- [x] 4.5 Browser manual check confirms unit cards clearly distinguish buildable, building, ready, and sendable states
-- [x] 4.6 Browser manual check confirms NPC active build unit is visible without showing progress
-- [x] 4.7 Android emulator/device check confirms portrait readability and touch alignment
-- [x] 4.8 `manual-verification.md` records the manual browser and Android check
+- [x] 4.4 Browser manual check confirms pushing/holding/under-pressure states use blue/white/red visual treatment — bfe708e
+- [x] 4.5 Browser manual check confirms unit cards clearly distinguish buildable, building, ready, and sendable states — bfe708e
+- [x] 4.6 Browser manual check confirms NPC active build unit is visible without showing progress — bfe708e
+- [x] 4.7 Android emulator/device check confirms portrait readability and touch alignment — bfe708e
+- [x] 4.8 `manual-verification.md` records the manual browser and Android check — bfe708e
