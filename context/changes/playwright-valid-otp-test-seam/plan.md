@@ -261,8 +261,8 @@ There is no schema or data migration. The E2E database is process-local and disc
 
 #### Automated
 
-- [ ] 1.1 Captured store tests pass: `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~CapturedEmailStoreTests`
-- [ ] 1.2 API solution builds cleanly: `dotnet build src/api/frontLineApi.slnx`
+- [x] 1.1 Captured store tests pass: `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~CapturedEmailStoreTests`
+- [x] 1.2 API solution builds cleanly: `dotnet build src/api/frontLineApi.slnx`
 
 ### Phase 2: Exact-E2E OTP Retrieval Endpoint
 
