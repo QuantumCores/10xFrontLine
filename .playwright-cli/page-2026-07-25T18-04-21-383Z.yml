@@ -1,0 +1,12 @@
+- main [ref=e14]:
+  - generic [ref=e15]:
+    - paragraph [ref=e16]: Front Line
+    - heading "Enter code" [level=1] [ref=e17]
+    - generic [ref=e18]:
+      - generic [ref=e19]: Email
+      - textbox "Email" [ref=e20]: playwright-test@example.com
+      - generic [ref=e21]: Code
+      - textbox "Code" [ref=e22]
+      - button "Verify" [disabled] [ref=e23]
+    - link "Request another code" [ref=e24] [cursor=pointer]:
+      - /url: /sign-in

@@ -1,0 +1,7 @@
+- main [ref=e26]:
+  - generic [ref=e27]:
+    - generic [ref=e28]:
+      - paragraph [ref=e29]: Front Line
+      - paragraph [ref=e30]: playwright-test@example.com
+    - button "Sign out" [ref=e31] [cursor=pointer]
+  - generic "Front Line match" [ref=e33]
