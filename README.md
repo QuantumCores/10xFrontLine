@@ -23,6 +23,75 @@ npm start
 
 The API development profile listens on `http://localhost:5178`. The Angular client uses `http://localhost:5178/api` as its default API base URL and serves locally through Angular CLI, normally `http://localhost:4200`.
 
+## E2E Passwordless Login with Playwright CLI
+
+Use this workflow only for a local, manual browser check. The E2E API exposes a one-shot login-code retrieval endpoint only in the exact `E2E` environment. Bind it directly to `127.0.0.1`; do not expose it on another interface or put it behind a reverse proxy.
+
+In the first PowerShell terminal, generate 32 random bytes for a fresh per-run access key. Start the second terminal from this process so it inherits the key without placing the value in command history or the clipboard, then start the API without a launch profile:
+
+```powershell
+$keyBytes = [Security.Cryptography.RandomNumberGenerator]::GetBytes(32)
+$env:E2E__AccessKey = [Convert]::ToBase64String($keyBytes)
+$keyBytes = $null
+$env:ASPNETCORE_ENVIRONMENT = 'E2E'
+$env:ASPNETCORE_URLS = 'http://127.0.0.1:5178'
+
+Start-Process pwsh
+dotnet run --no-launch-profile --project src/api/frontLineApi.csproj
+```
+
+Start Angular normally with `npm start` from `src/mbl`. In the second PowerShell terminal, open the app and take a fresh snapshot. Element refs belong to the active page state and can change between runs, so inspect each snapshot and substitute its current refs; do not assume refs such as `e10`, `e11`, `e22`, or `e23` are still valid.
+
+```powershell
+$email = 'player@example.com'
+
+playwright-cli open http://localhost:4200
+playwright-cli snapshot
+
+$emailRef = '<current email input ref>'
+$requestCodeRef = '<current request-code button ref>'
+playwright-cli fill $emailRef $email
+playwright-cli click $requestCodeRef
+```
+
+After the UI reaches the verification page, retrieve the real code captured by the API. The header reads the inherited environment variable, and only the response's `code` property is retained in `$code`:
+
+```powershell
+$headers = @{ 'X-FrontLine-E2E-Key' = $env:E2E__AccessKey }
+$body = @{ email = $email } | ConvertTo-Json
+$code = (Invoke-RestMethod `
+  -Method Post `
+  -Uri 'http://127.0.0.1:5178/api/e2e/auth/login-code' `
+  -Headers $headers `
+  -ContentType 'application/json' `
+  -Body $body).code
+
+playwright-cli snapshot
+$codeRef = '<current code input ref>'
+$verifyRef = '<current verify button ref>'
+playwright-cli fill $codeRef $code
+playwright-cli click $verifyRef
+playwright-cli snapshot
+```
+
+Confirm the final snapshot is on `/play`. Retrieval consumes the captured message: repeating the same `Invoke-RestMethod` call must return `404 Not Found`. If retrieval succeeds but its response is lost or cannot be parsed, return to the UI, request a new code, and retrieve that new code; the consumed credential cannot be recovered.
+
+When finished, stop the E2E API and remove sensitive values from both terminals. Clear the clipboard as a precaution even though this workflow does not use it:
+
+```powershell
+$code = $null
+$body = $null
+$headers = $null
+Remove-Item Env:E2E__AccessKey -ErrorAction SilentlyContinue
+Remove-Item Env:ASPNETCORE_ENVIRONMENT -ErrorAction SilentlyContinue
+Remove-Item Env:ASPNETCORE_URLS -ErrorAction SilentlyContinue
+Set-Clipboard -Value $null
+```
+
+Normal Development startup remains supported and unchanged: the E2E route is unavailable, while the existing OTP console log remains available for local development.
+
+Playwright CLI continues to generate snapshots and other session output under `.playwright-cli/`; ignoring that directory only keeps it out of Git and does not prevent snapshot generation or current-ref usage. If evidence must be retained, save it under an explicit, stable filename outside `.playwright-cli/`, review it for OTPs, email addresses, JWTs, and other sensitive data, and place it in the active `context/changes/<change-id>/` folder. Never place new evidence in `context/archive/`.
+
 ## Android Local Verification
 
 Run these commands from `src/mbl` after installing dependencies:

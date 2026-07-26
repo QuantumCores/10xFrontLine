@@ -280,13 +280,13 @@ There is no schema or data migration. The E2E database is process-local and disc
 
 #### Automated
 
-- [ ] 3.1 Full API test suite passes: `dotnet test src/api/frontLineApi.slnx`
-- [ ] 3.2 API solution builds cleanly: `dotnet build src/api/frontLineApi.slnx`
-- [ ] 3.3 Generated CLI output is ignored: `git check-ignore .playwright-cli/page-generated.yml`
+- [x] 3.1 Full API test suite passes: `dotnet test src/api/frontLineApi.slnx`
+- [x] 3.2 API solution builds cleanly: `dotnet build src/api/frontLineApi.slnx`
+- [x] 3.3 Generated CLI output is ignored: `git check-ignore .playwright-cli/page-generated.yml`
 
 #### Manual
 
-- [ ] 3.4 A human starts the API in exact E2E on `127.0.0.1`, follows the documented request/retrieve/fill/verify sequence, and reaches the authenticated `/play` route
-- [ ] 3.5 A second retrieval for the same issued code returns not found, and requesting a new code restores the workflow
-- [ ] 3.6 Starting the API normally in Development leaves the E2E route unavailable while preserving the existing Development OTP console log
-- [ ] 3.7 Local `.playwright-cli/` snapshots continue to appear and provide current element refs without showing as untracked Git files
+- [x] 3.4 A human starts the API in exact E2E on `127.0.0.1`, follows the documented request/retrieve/fill/verify sequence, and reaches the authenticated `/play` route
+- [x] 3.5 A second retrieval for the same issued code returns not found, and requesting a new code restores the workflow
+- [x] 3.6 Starting the API normally in Development leaves the E2E route unavailable while preserving the existing Development OTP console log
+- [x] 3.7 Local `.playwright-cli/` snapshots continue to appear and provide current element refs without showing as untracked Git files
