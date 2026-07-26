@@ -1,9 +1,9 @@
 ---
 change_id: playwright-valid-otp-test-seam
 title: Provide Playwright access to valid one-time login codes
-status: implementing
+status: impl_reviewed
 created: 2026-07-25
-updated: 2026-07-25
+updated: 2026-07-26
 archived_at: null
 ---
 

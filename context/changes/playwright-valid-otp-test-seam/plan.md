@@ -268,13 +268,13 @@ There is no schema or data migration. The E2E database is process-local and disc
 
 #### Automated
 
-- [x] 2.1 E2E endpoint integration tests pass: `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~E2eLoginCodeEndpointTests`
-- [x] 2.2 Existing auth integration tests pass unchanged: `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~AuthEndpointTests`
-- [x] 2.3 API solution builds cleanly: `dotnet build src/api/frontLineApi.slnx`
+- [x] 2.1 E2E endpoint integration tests pass: `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~E2eLoginCodeEndpointTests` — 243091c
+- [x] 2.2 Existing auth integration tests pass unchanged: `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~AuthEndpointTests` — 243091c
+- [x] 2.3 API solution builds cleanly: `dotnet build src/api/frontLineApi.slnx` — 243091c
 
 #### Manual
 
-- [x] 2.4 Code review confirms the E2E route mapping is nested under an exact `IsEnvironment("E2E")` condition and no reusable access key is committed
+- [x] 2.4 Code review confirms the E2E route mapping is nested under an exact `IsEnvironment("E2E")` condition and no reusable access key is committed — 243091c
 
 ### Phase 3: Manual Playwright Workflow and Generated-Artifact Hygiene
 
