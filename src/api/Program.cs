@@ -4,6 +4,7 @@ using frontLineApi.Auth;
 using frontLineApi.Configuration;
 using frontLineApi.Data;
 using frontLineApi.Email;
+using frontLineApi.E2E;
 using frontLineApi.Results;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -26,12 +27,24 @@ public class Program
         builder.Services.Configure<PasswordlessOptions>(builder.Configuration.GetSection("Passwordless"));
         builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
 
+        if (builder.Environment.IsEnvironment("E2E"))
+        {
+            builder.Services.AddOptions<E2eOptions>()
+                .Bind(builder.Configuration.GetSection(E2eOptions.SectionName))
+                .Validate(E2eOptions.HasValidAccessKey, $"E2E:AccessKey must be a non-placeholder value of at least {E2eOptions.MinimumAccessKeyLength} characters.")
+                .ValidateOnStart();
+        }
+
         builder.Services.AddDbContext<FrontLineDbContext>(options =>
         {
-            if (builder.Environment.IsEnvironment("Testing"))
+            if (builder.Environment.IsEnvironment("Testing") ||
+                builder.Environment.IsEnvironment("E2E"))
             {
+                var databaseName = builder.Environment.IsEnvironment("E2E")
+                    ? builder.Configuration["E2E:InMemoryDatabaseName"] ?? $"FrontLineE2E-{Environment.ProcessId}"
+                    : builder.Configuration["Testing:InMemoryDatabaseName"] ?? "FrontLineTests";
                 options.UseInMemoryDatabase(
-                    builder.Configuration["Testing:InMemoryDatabaseName"] ?? "FrontLineTests");
+                    databaseName);
             }
             else
             {
@@ -113,6 +126,11 @@ public class Program
 
 
         app.MapControllers();
+
+        if (app.Environment.IsEnvironment("E2E"))
+        {
+            app.MapE2eAuthEndpoints();
+        }
 
         app.Run();
     }
