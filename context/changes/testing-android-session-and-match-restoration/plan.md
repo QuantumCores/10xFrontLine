@@ -497,8 +497,8 @@ This introduces the first match-session schema at version 1 and does not modify 
 
 #### Manual
 
-- [ ] 1.5 Code review confirms persisted DTOs are versioned and distinct from render snapshots
-- [ ] 1.6 Code review confirms balance constants are unchanged and RNG continuation is owned by the match session
+- [x] 1.5 Code review confirms persisted DTOs are versioned and distinct from render snapshots
+- [x] 1.6 Code review confirms balance constants are unchanged and RNG continuation is owned by the match session
 
 ### Phase 2: Durable Lifecycle Checkpointing
 

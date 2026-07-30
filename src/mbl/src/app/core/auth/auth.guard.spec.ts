@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, provideRouter, Router, RouterStateSnapshot } from '@angular/router';
 
+import { PersistentMemoryStorage } from '../../../testing/persistent-memory-storage';
 import { authGuard } from './auth.guard';
 import { AuthStateService } from './auth-state.service';
 import { AUTH_STORAGE, StorageLike } from './token-storage.service';
@@ -10,28 +11,6 @@ import { AUTH_STORAGE, StorageLike } from './token-storage.service';
   template: ''
 })
 class TestRouteComponent {}
-
-class MemoryStorage implements StorageLike {
-  private readonly values = new Map<string, string>();
-
-  constructor(seed?: Record<string, unknown>) {
-    if (seed) {
-      this.values.set('frontLine.authSession', JSON.stringify(seed));
-    }
-  }
-
-  getItem(key: string): string | null {
-    return this.values.get(key) ?? null;
-  }
-
-  setItem(key: string, value: string): void {
-    this.values.set(key, value);
-  }
-
-  removeItem(key: string): void {
-    this.values.delete(key);
-  }
-}
 
 describe('authGuard', () => {
   function configure(storage: StorageLike): void {
@@ -48,7 +27,7 @@ describe('authGuard', () => {
   }
 
   it('redirects anonymous players to sign-in', () => {
-    configure(new MemoryStorage());
+    configure(new PersistentMemoryStorage());
     const router = TestBed.inject(Router);
 
     const result = TestBed.runInInjectionContext(() =>
@@ -60,14 +39,16 @@ describe('authGuard', () => {
   });
 
   it('allows players with a valid session', () => {
-    configure(new MemoryStorage({
+    const storage = new PersistentMemoryStorage();
+    storage.seed('frontLine.authSession', {
       token: 'jwt-token',
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
       player: {
         id: 'player-1',
         email: 'player@example.com'
       }
-    }));
+    });
+    configure(storage);
 
     const result = TestBed.runInInjectionContext(() =>
       authGuard({} as ActivatedRouteSnapshot, { url: '/play' } as RouterStateSnapshot)

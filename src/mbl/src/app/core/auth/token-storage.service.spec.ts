@@ -1,29 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 
-import { AUTH_STORAGE, AuthSession, StorageLike, TokenStorageService } from './token-storage.service';
-
-class MemoryStorage implements StorageLike {
-  private readonly values = new Map<string, string>();
-
-  getItem(key: string): string | null {
-    return this.values.get(key) ?? null;
-  }
-
-  setItem(key: string, value: string): void {
-    this.values.set(key, value);
-  }
-
-  removeItem(key: string): void {
-    this.values.delete(key);
-  }
-}
+import { PersistentMemoryStorage } from '../../../testing/persistent-memory-storage';
+import { AUTH_STORAGE, AuthSession, TokenStorageService } from './token-storage.service';
 
 describe('TokenStorageService', () => {
-  let storage: MemoryStorage;
+  let storage: PersistentMemoryStorage;
   let service: TokenStorageService;
 
   beforeEach(() => {
-    storage = new MemoryStorage();
+    storage = new PersistentMemoryStorage();
     TestBed.configureTestingModule({
       providers: [
         { provide: AUTH_STORAGE, useValue: storage }

@@ -1,9 +1,13 @@
-import { MATCH_CONFIG, type MatchConfig } from './match-config';
+import { MATCH_CONFIG, MATCH_CONFIG_VERSION, type MatchConfig } from './match-config';
+import { MatchRandom, type MatchRandomState } from './match-random';
 import {
   type ActiveBuildState,
+  type ActiveBuildCheckpoint,
   type CompletedMatchSummary,
   type HeldUnit,
+  type HeldUnitCheckpoint,
   type HeldUnitSlots,
+  type MatchEngineCheckpoint,
   type MatchSnapshot,
   type NpcDecisionContext,
   type NpcState,
@@ -16,13 +20,17 @@ import {
 export interface MatchEngineOptions {
   config?: MatchConfig;
   random?: () => number;
+  seed?: number;
   chooseNpcUnit?: (context: NpcDecisionContext) => UnitType;
   clock?: () => Date;
 }
 
+export type MatchEngineHydrationOptions = Omit<MatchEngineOptions, 'random' | 'seed'>;
+
 export class MatchEngine {
   private readonly config: MatchConfig;
   private readonly random: () => number;
+  private readonly matchRandom: MatchRandom | null;
   private readonly chooseNpcUnitOverride?: (context: NpcDecisionContext) => UnitType;
   private readonly clock: () => Date;
   private elapsedMs = 0;
@@ -38,11 +46,43 @@ export class MatchEngine {
 
   constructor(options: MatchEngineOptions = {}) {
     this.config = options.config ?? MATCH_CONFIG;
-    this.random = options.random ?? Math.random;
+    if (options.random && options.seed !== undefined) {
+      throw new Error('Provide either a random override or a seed, not both.');
+    }
+
+    this.matchRandom = options.random ? null : MatchRandom.create(options.seed);
+    this.random = options.random ?? (() => this.matchRandom!.next());
     this.chooseNpcUnitOverride = options.chooseNpcUnit;
     this.clock = options.clock ?? (() => new Date());
     this.frontlinePosition = this.config.initialFrontlinePosition;
     this.nextNpcBuildAtMs = this.config.npcCadenceMs;
+  }
+
+  static hydrate(
+    checkpoint: MatchEngineCheckpoint,
+    options: MatchEngineHydrationOptions = {}
+  ): MatchEngine {
+    const config = options.config ?? MATCH_CONFIG;
+    assertValidCheckpoint(checkpoint, config);
+
+    const engine = new MatchEngine({
+      ...options,
+      seed: checkpoint.randomState.state
+    });
+    engine.restoreCheckpoint(checkpoint);
+    return engine;
+  }
+
+  static isCheckpointValid(
+    checkpoint: unknown,
+    config: MatchConfig = MATCH_CONFIG
+  ): checkpoint is MatchEngineCheckpoint {
+    try {
+      assertValidCheckpoint(checkpoint, config);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   startBuild(unitType: UnitType): StartBuildResult {
@@ -111,6 +151,31 @@ export class MatchEngine {
       heldUnits: cloneHeldUnitSlots(this.heldUnits),
       npc: this.getNpcSnapshot(),
       completion: this.completion ? { ...this.completion } : null
+    };
+  }
+
+  getCheckpoint(): MatchEngineCheckpoint {
+    if (!this.matchRandom) {
+      throw new Error('A match using an external random source cannot be checkpointed.');
+    }
+
+    return {
+      matchConfigVersion: MATCH_CONFIG_VERSION,
+      elapsedMs: this.elapsedMs,
+      frontlinePosition: this.frontlinePosition,
+      playerPressure: this.playerPressure,
+      npcPressure: this.npcPressure,
+      playerActiveBuild: toBuildCheckpoint(this.playerActiveBuild),
+      heldUnits: {
+        infantry: toHeldUnitCheckpoint(this.heldUnits.infantry),
+        tank: toHeldUnitCheckpoint(this.heldUnits.tank),
+        artillery: toHeldUnitCheckpoint(this.heldUnits.artillery)
+      },
+      npcActiveBuild: toBuildCheckpoint(this.npcActiveBuild),
+      nextNpcBuildAtMs: this.nextNpcBuildAtMs,
+      npcSentUnits: this.npcSentUnits,
+      completion: this.completion ? { ...this.completion } : null,
+      randomState: this.matchRandom.getState()
     };
   }
 
@@ -258,6 +323,21 @@ export class MatchEngine {
   private isKnownUnit(unitType: UnitType): boolean {
     return UNIT_TYPES.includes(unitType);
   }
+
+  private restoreCheckpoint(checkpoint: MatchEngineCheckpoint): void {
+    this.elapsedMs = checkpoint.elapsedMs;
+    this.frontlinePosition = checkpoint.frontlinePosition;
+    this.playerPressure = checkpoint.playerPressure;
+    this.npcPressure = checkpoint.npcPressure;
+    this.playerActiveBuild = fromBuildCheckpoint(checkpoint.playerActiveBuild, this.config);
+    for (const unitType of UNIT_TYPES) {
+      this.heldUnits[unitType] = fromHeldUnitCheckpoint(checkpoint.heldUnits[unitType], this.config);
+    }
+    this.npcActiveBuild = fromBuildCheckpoint(checkpoint.npcActiveBuild, this.config);
+    this.nextNpcBuildAtMs = checkpoint.nextNpcBuildAtMs;
+    this.npcSentUnits = checkpoint.npcSentUnits;
+    this.completion = checkpoint.completion ? { ...checkpoint.completion } : null;
+  }
 }
 
 function advanceBuild(build: ActiveBuildState, deltaMs: number): ActiveBuildState {
@@ -285,6 +365,45 @@ function cloneHeldUnit(unit: HeldUnit | null): HeldUnit | null {
   return unit ? { ...unit } : null;
 }
 
+function toBuildCheckpoint(build: ActiveBuildState | null): ActiveBuildCheckpoint | null {
+  if (!build) {
+    return null;
+  }
+
+  return {
+    unitType: build.unitType,
+    startedAtMs: build.startedAtMs,
+    elapsedMs: build.elapsedMs
+  };
+}
+
+function fromBuildCheckpoint(
+  build: ActiveBuildCheckpoint | null,
+  config: MatchConfig
+): ActiveBuildState | null {
+  if (!build) {
+    return null;
+  }
+
+  const durationMs = config.units[build.unitType].buildTimeMs;
+  return {
+    ...build,
+    durationMs,
+    progress: build.elapsedMs / durationMs
+  };
+}
+
+function toHeldUnitCheckpoint(unit: HeldUnit | null): HeldUnitCheckpoint | null {
+  return unit ? { unitType: unit.unitType, completedAtMs: unit.completedAtMs } : null;
+}
+
+function fromHeldUnitCheckpoint(
+  unit: HeldUnitCheckpoint | null,
+  config: MatchConfig
+): HeldUnit | null {
+  return unit ? { ...unit, strength: config.units[unit.unitType].strength } : null;
+}
+
 function createEmptyHeldUnitSlots(): HeldUnitSlots {
   return {
     infantry: null,
@@ -295,4 +414,118 @@ function createEmptyHeldUnitSlots(): HeldUnitSlots {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function assertValidCheckpoint(value: unknown, config: MatchConfig): asserts value is MatchEngineCheckpoint {
+  if (!isRecord(value) ||
+      value['matchConfigVersion'] !== MATCH_CONFIG_VERSION ||
+      !isFiniteNumberInRange(value['elapsedMs'], 0) ||
+      !isFiniteNumberInRange(
+        value['frontlinePosition'],
+        config.minimumFrontlinePosition,
+        config.maximumFrontlinePosition
+      ) ||
+      !isFiniteNumberInRange(value['playerPressure'], 0) ||
+      !isFiniteNumberInRange(value['npcPressure'], 0) ||
+      !isBuildCheckpoint(value['playerActiveBuild'], value['elapsedMs'], config) ||
+      !isHeldUnitSlotsCheckpoint(value['heldUnits'], value['elapsedMs']) ||
+      !isBuildCheckpoint(value['npcActiveBuild'], value['elapsedMs'], config) ||
+      !isFiniteNumberInRange(value['nextNpcBuildAtMs'], 0) ||
+      !Number.isInteger(value['npcSentUnits']) ||
+      Number(value['npcSentUnits']) < 0 ||
+      !isCompletion(value['completion'], config) ||
+      !isRandomState(value['randomState'])) {
+    throw new Error('Invalid match engine checkpoint.');
+  }
+
+  if (value['completion'] !== null &&
+      (value['playerActiveBuild'] !== null || value['npcActiveBuild'] !== null)) {
+    throw new Error('A completed match cannot contain active builds.');
+  }
+
+  if (value['completion'] !== null &&
+      value['frontlinePosition'] !== value['completion'].finalFrontlinePosition) {
+    throw new Error('A completed match must remain at its final boundary.');
+  }
+}
+
+function isBuildCheckpoint(
+  value: unknown,
+  matchElapsedMs: unknown,
+  config: MatchConfig
+): value is ActiveBuildCheckpoint | null {
+  if (value === null) {
+    return true;
+  }
+
+  if (!isRecord(value) || !isUnitType(value['unitType'])) {
+    return false;
+  }
+
+  const durationMs = config.units[value['unitType']].buildTimeMs;
+  return isFiniteNumberInRange(value['startedAtMs'], 0, Number(matchElapsedMs)) &&
+    isFiniteNumberInRange(value['elapsedMs'], 0, durationMs) &&
+    Number(value['elapsedMs']) < durationMs &&
+    Number(value['startedAtMs']) + Number(value['elapsedMs']) <= Number(matchElapsedMs);
+}
+
+function isHeldUnitSlotsCheckpoint(value: unknown, matchElapsedMs: unknown): boolean {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return UNIT_TYPES.every((unitType) => {
+    const unit = value[unitType];
+    return unit === null || (
+      isRecord(unit) &&
+      unit['unitType'] === unitType &&
+      isFiniteNumberInRange(unit['completedAtMs'], 0, Number(matchElapsedMs))
+    );
+  });
+}
+
+function isCompletion(value: unknown, config: MatchConfig): value is CompletedMatchSummary | null {
+  if (value === null) {
+    return true;
+  }
+
+  if (!isRecord(value) ||
+      (value['outcome'] !== 'Victory' && value['outcome'] !== 'Defeat') ||
+      !Number.isInteger(value['durationSeconds']) ||
+      Number(value['durationSeconds']) < 1 ||
+      typeof value['completedAt'] !== 'string' ||
+      !Number.isFinite(Date.parse(value['completedAt'])) ||
+      !isFiniteNumberInRange(value['finalScore'], -10_000, 10_000) ||
+      !isFiniteNumberInRange(
+        value['finalFrontlinePosition'],
+        config.minimumFrontlinePosition,
+        config.maximumFrontlinePosition
+      )) {
+    return false;
+  }
+
+  const expectedBoundary = value['outcome'] === 'Victory'
+    ? config.maximumFrontlinePosition
+    : config.minimumFrontlinePosition;
+  return value['finalFrontlinePosition'] === expectedBoundary;
+}
+
+function isRandomState(value: unknown): value is MatchRandomState {
+  return isRecord(value) &&
+    value['algorithm'] === 'mulberry32' &&
+    Number.isInteger(value['state']) &&
+    Number(value['state']) >= 0 &&
+    Number(value['state']) <= 0xffff_ffff;
+}
+
+function isFiniteNumberInRange(value: unknown, min: number, max = Number.POSITIVE_INFINITY): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+}
+
+function isUnitType(value: unknown): value is UnitType {
+  return typeof value === 'string' && UNIT_TYPES.includes(value as UnitType);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

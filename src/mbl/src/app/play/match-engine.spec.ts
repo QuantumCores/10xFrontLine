@@ -1,5 +1,6 @@
 import { MATCH_CONFIG, type MatchConfig } from './match-config';
 import { MatchEngine } from './match-engine';
+import { MatchRandom } from './match-random';
 import { createCompletedResultRequest } from './match-result-mapper';
 
 describe('MatchEngine', () => {
@@ -138,6 +139,77 @@ describe('MatchEngine', () => {
       finalScore: 10_000,
       finalFrontlinePosition: 100
     });
+  });
+
+  it('hydrates a checkpoint and continues with equivalent future behavior', () => {
+    const uninterrupted = new MatchEngine({ seed: 123_456, clock: fixedClock });
+    uninterrupted.startBuild('artillery');
+    uninterrupted.step(MATCH_CONFIG.npcCadenceMs);
+    uninterrupted.step(900);
+
+    const checkpoint = uninterrupted.getCheckpoint();
+    const restored = MatchEngine.hydrate(checkpoint, { clock: fixedClock });
+
+    expect(restored.getSnapshot()).toEqual(uninterrupted.getSnapshot());
+    expect(restored.getCheckpoint()).toEqual(checkpoint);
+
+    checkpoint.heldUnits.infantry = {
+      unitType: 'infantry',
+      completedAtMs: 0
+    };
+    expect(restored.getSnapshot().heldUnits.infantry).toBeNull();
+
+    const deltas = [1_200, 3_200, 4_800, 3_200, 7_200];
+    for (const delta of deltas) {
+      expect(restored.step(delta)).toEqual(uninterrupted.step(delta));
+    }
+    expect(restored.getCheckpoint()).toEqual(uninterrupted.getCheckpoint());
+  });
+
+  it('resumes the seeded random sequence from serialized continuation state', () => {
+    const original = MatchRandom.create(987_654_321);
+    original.next();
+    original.next();
+    const resumed = new MatchRandom(original.getState());
+
+    expect(resumed.next()).toBe(original.next());
+    expect(resumed.next()).toBe(original.next());
+  });
+
+  it('rejects invalid seeded random continuation state', () => {
+    expect(() => new MatchRandom({ algorithm: 'mulberry32', state: -1 })).toThrowError(
+      'Invalid match random state.'
+    );
+    expect(() => new MatchRandom({ algorithm: 'mulberry32', state: 0x1_0000_0000 })).toThrowError(
+      'Invalid match random state.'
+    );
+  });
+
+  it('rejects invalid checkpoint invariants and config versions', () => {
+    const engine = new MatchEngine({ seed: 42, clock: fixedClock });
+    engine.step(500);
+    const checkpoint = engine.getCheckpoint();
+
+    expect(() => MatchEngine.hydrate({
+      ...checkpoint,
+      matchConfigVersion: checkpoint.matchConfigVersion + 1
+    })).toThrowError('Invalid match engine checkpoint.');
+    expect(() => MatchEngine.hydrate({
+      ...checkpoint,
+      frontlinePosition: MATCH_CONFIG.maximumFrontlinePosition + 1
+    })).toThrowError('Invalid match engine checkpoint.');
+    expect(() => MatchEngine.hydrate({
+      ...checkpoint,
+      nextNpcBuildAtMs: -1
+    })).toThrowError('Invalid match engine checkpoint.');
+  });
+
+  it('does not pretend an external random override has serializable continuation state', () => {
+    const engine = new MatchEngine({ random: () => 0.5, clock: fixedClock });
+
+    expect(() => engine.getCheckpoint()).toThrowError(
+      'A match using an external random source cannot be checkpointed.'
+    );
   });
 });
 

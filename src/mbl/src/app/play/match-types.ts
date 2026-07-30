@@ -1,4 +1,5 @@
 import type { CompletedResultRequest, MatchOutcome } from '../core/api/results-api.client';
+import type { MatchRandomState } from './match-random';
 
 export const UNIT_TYPES = ['infantry', 'tank', 'artillery'] as const;
 
@@ -49,6 +50,34 @@ export interface MatchSnapshot {
   heldUnits: HeldUnitSlots;
   npc: NpcState;
   completion: CompletedMatchSummary | null;
+}
+
+export interface ActiveBuildCheckpoint {
+  unitType: UnitType;
+  startedAtMs: number;
+  elapsedMs: number;
+}
+
+export interface HeldUnitCheckpoint {
+  unitType: UnitType;
+  completedAtMs: number;
+}
+
+export type HeldUnitCheckpointSlots = Record<UnitType, HeldUnitCheckpoint | null>;
+
+export interface MatchEngineCheckpoint {
+  matchConfigVersion: number;
+  elapsedMs: number;
+  frontlinePosition: number;
+  playerPressure: number;
+  npcPressure: number;
+  playerActiveBuild: ActiveBuildCheckpoint | null;
+  heldUnits: HeldUnitCheckpointSlots;
+  npcActiveBuild: ActiveBuildCheckpoint | null;
+  nextNpcBuildAtMs: number;
+  npcSentUnits: number;
+  completion: CompletedMatchSummary | null;
+  randomState: MatchRandomState;
 }
 
 export interface CompletedMatchSummary {

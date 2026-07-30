@@ -2,33 +2,23 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
+import { PersistentMemoryStorage } from '../../../testing/persistent-memory-storage';
 import { authInterceptor } from '../auth/auth.interceptor';
-import { AUTH_STORAGE, StorageLike } from '../auth/token-storage.service';
+import { AUTH_STORAGE } from '../auth/token-storage.service';
 import { API_BASE_URL } from './api-base-url';
 import { ResultsApiClient } from './results-api.client';
 
-class MemoryStorage implements StorageLike {
-  private readonly values = new Map<string, string>();
-
-  constructor(seed: Record<string, unknown>) {
-    this.values.set('frontLine.authSession', JSON.stringify(seed));
-  }
-
-  getItem(key: string): string | null {
-    return this.values.get(key) ?? null;
-  }
-
-  setItem(key: string, value: string): void {
-    this.values.set(key, value);
-  }
-
-  removeItem(key: string): void {
-    this.values.delete(key);
-  }
-}
-
 describe('ResultsApiClient', () => {
   it('posts the completed result with the stored JWT', () => {
+    const storage = new PersistentMemoryStorage();
+    storage.seed('frontLine.authSession', {
+      token: 'jwt-token',
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      player: {
+        id: 'player-1',
+        email: 'player@example.com'
+      }
+    });
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
@@ -36,14 +26,7 @@ describe('ResultsApiClient', () => {
         { provide: API_BASE_URL, useValue: 'https://api.test/api' },
         {
           provide: AUTH_STORAGE,
-          useValue: new MemoryStorage({
-            token: 'jwt-token',
-            expiresAt: new Date(Date.now() + 60_000).toISOString(),
-            player: {
-              id: 'player-1',
-              email: 'player@example.com'
-            }
-          })
+          useValue: storage
         }
       ]
     });

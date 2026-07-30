@@ -1,26 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
+import { PersistentMemoryStorage } from '../../../testing/persistent-memory-storage';
 import { AuthApiClient, VerifyCodeResponse } from '../api/auth-api.client';
 import { AuthService } from './auth.service';
 import { AuthStateService } from './auth-state.service';
-import { AUTH_STORAGE, StorageLike } from './token-storage.service';
-
-class MemoryStorage implements StorageLike {
-  private readonly values = new Map<string, string>();
-
-  getItem(key: string): string | null {
-    return this.values.get(key) ?? null;
-  }
-
-  setItem(key: string, value: string): void {
-    this.values.set(key, value);
-  }
-
-  removeItem(key: string): void {
-    this.values.delete(key);
-  }
-}
+import { AUTH_STORAGE } from './token-storage.service';
 
 describe('AuthService', () => {
   let authApi: Pick<AuthApiClient, 'requestCode' | 'verifyCode'>;
@@ -36,7 +21,7 @@ describe('AuthService', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: AuthApiClient, useValue: authApi },
-        { provide: AUTH_STORAGE, useValue: new MemoryStorage() }
+        { provide: AUTH_STORAGE, useValue: new PersistentMemoryStorage() }
       ]
     });
 

@@ -1,5 +1,7 @@
 import { UNIT_TYPES, type UnitDefinition, type UnitType } from './match-types';
 
+export const MATCH_CONFIG_VERSION = 1;
+
 export interface MatchConfig {
   initialFrontlinePosition: number;
   minimumFrontlinePosition: number;
