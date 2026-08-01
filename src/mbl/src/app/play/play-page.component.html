@@ -18,5 +18,11 @@
     </section>
   }
 
-  <app-phaser-game (matchCompleted)="handleMatchCompleted($event)" />
+  @if (sessionReady() && initialCheckpoint(); as checkpoint) {
+    <app-phaser-game
+      [initialCheckpoint]="checkpoint"
+      (matchCheckpoint)="handleMatchCheckpoint($event)"
+      (matchCompleted)="handleMatchCompleted($event)"
+    />
+  }
 </main>

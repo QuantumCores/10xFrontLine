@@ -1,11 +1,20 @@
 import Phaser from 'phaser';
 
 import { MATCH_CONFIG, MATCH_UNIT_TYPES } from './match-config';
+import { isPeriodicCheckpointDue } from './match-checkpoint-policy';
 import { MatchEngine } from './match-engine';
-import type { CompletedMatchSummary, MatchSnapshot, UnitType } from './match-types';
+import type {
+  CompletedMatchSummary,
+  MatchEngineCheckpoint,
+  MatchSnapshot,
+  UnitType
+} from './match-types';
 
 export interface FrontlineMatchSceneOptions {
+  initialCheckpoint: MatchEngineCheckpoint;
   onComplete: (summary: CompletedMatchSummary) => void;
+  onCheckpoint: (checkpoint: MatchEngineCheckpoint) => void;
+  registerCheckpointRequest: (request: () => void) => void;
 }
 
 interface UnitControlView {
@@ -30,10 +39,10 @@ const LANE_TOP = 76;
 const LANE_BOTTOM = 658;
 const LANE_HEIGHT = LANE_BOTTOM - LANE_TOP;
 const CONTROL_TOP = 682;
-
 export class FrontlineMatchScene extends Phaser.Scene {
   private readonly onComplete: (summary: CompletedMatchSummary) => void;
-  private readonly engine = new MatchEngine();
+  private readonly onCheckpoint: (checkpoint: MatchEngineCheckpoint) => void;
+  private readonly engine: MatchEngine;
   private readonly unitControls = new Map<UnitType, UnitControlView>();
   private readonly npcUnitControls = new Map<UnitType, NpcUnitControlView>();
   private completionEmitted = false;
@@ -41,10 +50,15 @@ export class FrontlineMatchScene extends Phaser.Scene {
   private frontlineMarker?: Phaser.GameObjects.Rectangle;
   private frontlineText?: Phaser.GameObjects.Text;
   private overlay?: Phaser.GameObjects.Container;
+  private lastCheckpointElapsedMs: number;
 
   constructor(options: FrontlineMatchSceneOptions) {
     super({ key: 'FrontlineMatchScene' });
     this.onComplete = options.onComplete;
+    this.onCheckpoint = options.onCheckpoint;
+    this.engine = MatchEngine.hydrate(options.initialCheckpoint);
+    this.lastCheckpointElapsedMs = options.initialCheckpoint.elapsedMs;
+    options.registerCheckpointRequest(() => this.publishCheckpoint());
   }
 
   create(): void {
@@ -55,11 +69,15 @@ export class FrontlineMatchScene extends Phaser.Scene {
   }
 
   override update(_time: number, delta: number): void {
-    const snapshot = this.engine.getCompletion()
-      ? this.engine.getSnapshot()
-      : this.engine.step(Math.min(delta, 100));
+    const previous = this.engine.getSnapshot();
+    const snapshot = previous.completion ? previous : this.engine.step(Math.min(delta, 100));
 
     this.render(snapshot);
+
+    if (hasSignificantTransition(previous, snapshot) ||
+        isPeriodicCheckpointDue(this.lastCheckpointElapsedMs, snapshot.elapsedMs)) {
+      this.publishCheckpoint();
+    }
 
     if (snapshot.completion && !this.completionEmitted) {
       this.completionEmitted = true;
@@ -184,16 +202,26 @@ export class FrontlineMatchScene extends Phaser.Scene {
     }
 
     if (snapshot.heldUnits[unitType]) {
-      this.engine.sendHeldUnit(unitType);
+      const result = this.engine.sendHeldUnit(unitType);
       this.render(this.engine.getSnapshot());
+      if (result.accepted) {
+        this.publishCheckpoint();
+      }
       return;
     }
 
     const result = this.engine.startBuild(unitType);
     if (result.accepted) {
       this.render(this.engine.getSnapshot());
+      this.publishCheckpoint();
       return;
     }
+  }
+
+  private publishCheckpoint(): void {
+    const checkpoint = this.engine.getCheckpoint();
+    this.lastCheckpointElapsedMs = checkpoint.elapsedMs;
+    this.onCheckpoint(checkpoint);
   }
 
   private render(snapshot: MatchSnapshot): void {
@@ -342,4 +370,14 @@ export class FrontlineMatchScene extends Phaser.Scene {
 
     return 0xf4fbf6;
   }
+}
+
+function hasSignificantTransition(previous: MatchSnapshot, current: MatchSnapshot): boolean {
+  return previous.playerActiveBuild?.unitType !== current.playerActiveBuild?.unitType ||
+    MATCH_UNIT_TYPES.some((unitType) =>
+      previous.heldUnits[unitType]?.completedAtMs !== current.heldUnits[unitType]?.completedAtMs
+    ) ||
+    previous.npc.activeBuild?.unitType !== current.npc.activeBuild?.unitType ||
+    previous.npc.sentUnits !== current.npc.sentUnits ||
+    previous.completion?.completedAt !== current.completion?.completedAt;
 }

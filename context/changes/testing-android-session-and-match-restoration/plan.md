@@ -490,31 +490,31 @@ This introduces the first match-session schema at version 1 and does not modify 
 
 #### Automated
 
-- [x] 1.1 Engine restoration specs pass from `src/mbl`: `npm test -- --include src/app/play/match-engine.spec.ts`
-- [x] 1.2 Match-session store specs pass from `src/mbl`: `npm test -- --include src/app/core/session/match-session.store.spec.ts`
-- [x] 1.3 Angular lint passes from `src/mbl`: `npm run lint`
-- [x] 1.4 Angular production build passes from `src/mbl`: `npm run build`
+- [x] 1.1 Engine restoration specs pass from `src/mbl`: `npm test -- --include src/app/play/match-engine.spec.ts` — 069a100
+- [x] 1.2 Match-session store specs pass from `src/mbl`: `npm test -- --include src/app/core/session/match-session.store.spec.ts` — 069a100
+- [x] 1.3 Angular lint passes from `src/mbl`: `npm run lint` — 069a100
+- [x] 1.4 Angular production build passes from `src/mbl`: `npm run build` — 069a100
 
 #### Manual
 
-- [x] 1.5 Code review confirms persisted DTOs are versioned and distinct from render snapshots
-- [x] 1.6 Code review confirms balance constants are unchanged and RNG continuation is owned by the match session
+- [x] 1.5 Code review confirms persisted DTOs are versioned and distinct from render snapshots — 069a100
+- [x] 1.6 Code review confirms balance constants are unchanged and RNG continuation is owned by the match session — 069a100
 
 ### Phase 2: Durable Lifecycle Checkpointing
 
 #### Automated
 
-- [ ] 2.1 Lifecycle adapter specs pass from `src/mbl`: `npm test -- --include src/app/core/lifecycle/app-lifecycle.service.spec.ts`
-- [ ] 2.2 Phaser host and play-page restoration specs pass from `src/mbl`: `npm test -- --include src/app/play/phaser-game.component.spec.ts --include src/app/play/play-page.component.spec.ts`
-- [ ] 2.3 Full Angular test suite passes from `src/mbl`: `npm test -- --no-progress`
-- [ ] 2.4 Angular lint and production build pass from `src/mbl`: `npm run lint` and `npm run build`
-- [ ] 2.5 Capacitor Android sync succeeds from `src/mbl`: `npx cap sync android`
+- [x] 2.1 Lifecycle adapter specs pass from `src/mbl`: `npm test -- --include src/app/core/lifecycle/app-lifecycle.service.spec.ts`
+- [x] 2.2 Phaser host and play-page restoration specs pass from `src/mbl`: `npm test -- --include src/app/play/phaser-game.component.spec.ts --include src/app/play/play-page.component.spec.ts`
+- [x] 2.3 Full Angular test suite passes from `src/mbl`: `npm test -- --no-progress`
+- [x] 2.4 Angular lint and production build pass from `src/mbl`: `npm run lint` and `npm run build`
+- [x] 2.5 Capacitor Android sync succeeds from `src/mbl`: `npx cap sync android`
 
 #### Manual
 
-- [ ] 2.6 Browser refresh during an active match restores the same paused match and stable match ID
-- [ ] 2.7 Android background/foreground smoke check resumes without elapsed-time catch-up or duplicated Phaser instances
-- [ ] 2.8 Existing portrait layout, touch alignment, and match feedback remain unchanged
+- [x] 2.6 Browser refresh during an active match restores the same paused match and stable match ID
+- [x] 2.7 Android background/foreground smoke check resumes without elapsed-time catch-up or duplicated Phaser instances
+- [x] 2.8 Existing portrait layout, touch alignment, and match feedback remain unchanged
 
 ### Phase 3: Pending Result and Credential Recovery
 

@@ -1,14 +1,17 @@
 import Phaser from 'phaser';
 
 import { FrontlineMatchScene } from './frontline-match.scene';
-import type { CompletedMatchSummary } from './match-types';
+import type { CompletedMatchSummary, MatchEngineCheckpoint } from './match-types';
 
 export const FRONTLINE_GAME_WIDTH = 390;
 export const FRONTLINE_GAME_HEIGHT = 844;
 
 export function createFrontlineGameConfig(
   parent: HTMLElement,
-  onComplete: (summary: CompletedMatchSummary) => void
+  initialCheckpoint: MatchEngineCheckpoint,
+  onComplete: (summary: CompletedMatchSummary) => void,
+  onCheckpoint: (checkpoint: MatchEngineCheckpoint) => void,
+  registerCheckpointRequest: (request: () => void) => void
 ): Phaser.Types.Core.GameConfig {
   return {
     type: Phaser.AUTO,
@@ -20,6 +23,11 @@ export function createFrontlineGameConfig(
       width: FRONTLINE_GAME_WIDTH,
       height: FRONTLINE_GAME_HEIGHT
     },
-    scene: [new FrontlineMatchScene({ onComplete })]
+    scene: [new FrontlineMatchScene({
+      initialCheckpoint,
+      onComplete,
+      onCheckpoint,
+      registerCheckpointRequest
+    })]
   };
 }

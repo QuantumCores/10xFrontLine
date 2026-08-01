@@ -1,15 +1,23 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, InjectionToken, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { take } from 'rxjs';
+import { Subscription, take } from 'rxjs';
 
 import { CompletedResultRequest, ResultsApiClient } from '../core/api/results-api.client';
 import { AuthService } from '../core/auth/auth.service';
 import { AuthStateService } from '../core/auth/auth-state.service';
-import { CompletedMatchSummary } from './match-types';
+import { AppLifecycleService } from '../core/lifecycle/app-lifecycle.service';
+import { MatchSessionStore } from '../core/session/match-session.store';
+import { MatchEngine } from './match-engine';
+import { CompletedMatchSummary, MatchEngineCheckpoint } from './match-types';
 import { PhaserGameComponent } from './phaser-game.component';
 import { createCompletedResultRequest } from './match-result-mapper';
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
+
+export const MATCH_ID_FACTORY = new InjectionToken<() => string>('MATCH_ID_FACTORY', {
+  providedIn: 'root',
+  factory: () => () => globalThis.crypto.randomUUID()
+});
 
 @Component({
   selector: 'app-play-page',
@@ -17,12 +25,22 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
   templateUrl: './play-page.component.html',
   styleUrl: './play-page.component.scss'
 })
-export class PlayPageComponent {
+export class PlayPageComponent implements OnInit, OnDestroy {
   protected readonly authState = inject(AuthStateService);
 
   private readonly authService = inject(AuthService);
   private readonly resultsApi = inject(ResultsApiClient);
   private readonly router = inject(Router);
+  private readonly lifecycle = inject(AppLifecycleService);
+  private readonly matchSessions = inject(MatchSessionStore);
+  private readonly createMatchId = inject(MATCH_ID_FACTORY);
+  private readonly lifecycleSubscription = new Subscription();
+  private ownerPlayerId: string | null = null;
+  private clientMatchId: string | null = null;
+  private latestCheckpoint: MatchEngineCheckpoint | null = null;
+
+  protected readonly sessionReady = signal(false);
+  protected readonly initialCheckpoint = signal<MatchEngineCheckpoint | null>(null);
 
   protected readonly saveState = signal<SaveState>('idle');
   protected readonly resultPayload = signal<CompletedResultRequest | null>(null);
@@ -40,6 +58,35 @@ export class PlayPageComponent {
     }
   });
 
+  ngOnInit(): void {
+    const player = this.authState.player();
+    if (!player) {
+      this.sessionReady.set(true);
+      return;
+    }
+
+    this.ownerPlayerId = player.id;
+    const restored = this.matchSessions.readForPlayer(player.id);
+    if (restored?.state.kind === 'active') {
+      this.clientMatchId = restored.clientMatchId;
+      this.latestCheckpoint = restored.state.checkpoint;
+    } else if (!restored) {
+      this.clientMatchId = this.createMatchId();
+      this.latestCheckpoint = new MatchEngine().getCheckpoint();
+      this.persistCheckpoint(this.latestCheckpoint);
+    }
+
+    this.initialCheckpoint.set(this.latestCheckpoint);
+    this.sessionReady.set(true);
+    this.lifecycleSubscription.add(
+      this.lifecycle.background$.subscribe(() => this.flushLatestCheckpoint())
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.lifecycleSubscription.unsubscribe();
+  }
+
   logout(): void {
     this.authService.logout();
     void this.router.navigate(['/sign-in']);
@@ -53,6 +100,11 @@ export class PlayPageComponent {
     const payload = createCompletedResultRequest(summary);
     this.resultPayload.set(payload);
     this.saveCompletedResult(payload);
+  }
+
+  handleMatchCheckpoint(checkpoint: MatchEngineCheckpoint): void {
+    this.latestCheckpoint = checkpoint;
+    this.persistCheckpoint(checkpoint);
   }
 
   retrySave(): void {
@@ -76,6 +128,25 @@ export class PlayPageComponent {
       error: () => {
         this.saveState.set('failed');
       }
+    });
+  }
+
+  private flushLatestCheckpoint(): void {
+    if (this.latestCheckpoint) {
+      this.persistCheckpoint(this.latestCheckpoint);
+    }
+  }
+
+  private persistCheckpoint(checkpoint: MatchEngineCheckpoint): void {
+    if (!this.ownerPlayerId || !this.clientMatchId) {
+      return;
+    }
+
+    this.matchSessions.saveActive({
+      ownerPlayerId: this.ownerPlayerId,
+      clientMatchId: this.clientMatchId,
+      checkpointedAt: new Date().toISOString(),
+      checkpoint
     });
   }
 }

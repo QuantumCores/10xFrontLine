@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  Input,
   InjectionToken,
   NgZone,
   OnDestroy,
@@ -12,22 +13,37 @@ import {
 } from '@angular/core';
 import type Phaser from 'phaser';
 
-import type { CompletedMatchSummary } from './match-types';
+import type { CompletedMatchSummary, MatchEngineCheckpoint } from './match-types';
 
 export type PhaserGameFactory = (
   parent: HTMLElement,
-  onComplete: (summary: CompletedMatchSummary) => void
+  initialCheckpoint: MatchEngineCheckpoint,
+  onComplete: (summary: CompletedMatchSummary) => void,
+  onCheckpoint: (checkpoint: MatchEngineCheckpoint) => void,
+  registerCheckpointRequest: (request: () => void) => void
 ) => Phaser.Game | Promise<Phaser.Game>;
 
 export const PHASER_GAME_FACTORY = new InjectionToken<PhaserGameFactory>('PHASER_GAME_FACTORY', {
   providedIn: 'root',
-  factory: () => async (parent, onComplete) => {
+  factory: () => async (
+    parent,
+    initialCheckpoint,
+    onComplete,
+    onCheckpoint,
+    registerCheckpointRequest
+  ) => {
     const [{ default: PhaserModule }, { createFrontlineGameConfig }] = await Promise.all([
       import('phaser'),
       import('./frontline-game.config')
     ]);
 
-    return new PhaserModule.Game(createFrontlineGameConfig(parent, onComplete));
+    return new PhaserModule.Game(createFrontlineGameConfig(
+      parent,
+      initialCheckpoint,
+      onComplete,
+      onCheckpoint,
+      registerCheckpointRequest
+    ));
   }
 });
 
@@ -37,7 +53,9 @@ export const PHASER_GAME_FACTORY = new InjectionToken<PhaserGameFactory>('PHASER
   styleUrl: './phaser-game.component.scss'
 })
 export class PhaserGameComponent implements AfterViewInit, OnDestroy {
+  @Input({ required: true }) initialCheckpoint!: MatchEngineCheckpoint;
   @Output() readonly matchCompleted = new EventEmitter<CompletedMatchSummary>();
+  @Output() readonly matchCheckpoint = new EventEmitter<MatchEngineCheckpoint>();
   @ViewChild('gameHost', { static: true }) private readonly gameHost?: ElementRef<HTMLElement>;
 
   private readonly ngZone = inject(NgZone);
@@ -46,6 +64,7 @@ export class PhaserGameComponent implements AfterViewInit, OnDestroy {
   private emittedCompletion = false;
   private boundsTimer?: number;
   private destroyed = false;
+  private requestCheckpoint?: () => void;
 
   ngAfterViewInit(): void {
     const parent = this.gameHost?.nativeElement;
@@ -54,7 +73,15 @@ export class PhaserGameComponent implements AfterViewInit, OnDestroy {
     }
 
     this.ngZone.runOutsideAngular(() => {
-      const game = this.createGame(parent, (summary) => this.emitCompletion(summary));
+      const game = this.createGame(
+        parent,
+        this.initialCheckpoint,
+        (summary) => this.emitCompletion(summary),
+        (checkpoint) => this.emitCheckpoint(checkpoint),
+        (request) => {
+          this.requestCheckpoint = request;
+        }
+      );
       if (isPromiseLike(game)) {
         void game.then((resolvedGame) => this.attachGame(resolvedGame));
         return;
@@ -65,11 +92,13 @@ export class PhaserGameComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroyed = true;
     if (this.boundsTimer !== undefined) {
       window.clearTimeout(this.boundsTimer);
     }
 
+    this.requestCheckpoint?.();
+    this.destroyed = true;
+    this.requestCheckpoint = undefined;
     this.game?.destroy(true, false);
     this.game = undefined;
   }
@@ -81,6 +110,12 @@ export class PhaserGameComponent implements AfterViewInit, OnDestroy {
 
     this.emittedCompletion = true;
     this.ngZone.run(() => this.matchCompleted.emit(summary));
+  }
+
+  private emitCheckpoint(checkpoint: MatchEngineCheckpoint): void {
+    if (!this.destroyed) {
+      this.ngZone.run(() => this.matchCheckpoint.emit(checkpoint));
+    }
   }
 
   private attachGame(game: Phaser.Game): void {
