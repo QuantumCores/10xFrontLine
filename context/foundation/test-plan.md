@@ -65,7 +65,7 @@ the artifacts in that folder.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Android session and match restoration | Prove lifecycle recreation and credential failure cannot strand a player or silently destroy progress. | #1, #2, #3 | client integration, lifecycle unit, client/API contract | change opened | testing-android-session-and-match-restoration |
+| 1 | Android session and match restoration | Prove lifecycle recreation and credential failure cannot strand a player or silently destroy progress. | #1, #2, #3 | client integration, lifecycle unit, client/API contract | implementing | testing-android-session-and-match-restoration |
 | 2 | Deterministic match and result integrity | Prove match outcomes and retried result persistence remain correct. | #4, #5 | deterministic unit/property-style, API integration, client queue | not started | — |
 | 3 | Authorization abuse boundaries | Prove invalid and cross-player credentials cannot access protected state. | #3, #6 | API authorization integration, negative contract | not started | — |
 | 4 | Quality-gate wiring and cookbook | Automate the cheapest stable checks and document the patterns delivered by the rollout. | #1–#6 | scoped local gates, post-edit hook, cookbook | not started | — |
@@ -111,7 +111,25 @@ verified locations, commands, fixtures, and reference tests.
 
 ### 6.1 Testing Android session or match restoration
 
-- TBD — see §3 Phase 1 for lifecycle recreation, recoverable reauthentication, and equivalent-state restoration patterns.
+- Reuse `src/mbl/src/testing/persistent-memory-storage.ts` for auth and match
+  storage. Keep its backing maps alive while resetting TestBed so a new Angular
+  injector models a cold application bootstrap rather than a component remount.
+- Treat `MatchEngine` as the restoration oracle: hydrate uninterrupted and
+  restored engines from the same checkpoint, feed both identical commands and
+  deltas, then compare snapshots and checkpoints. Do not copy engine formulas
+  into expected values.
+- Inject `APP_LIFECYCLE_PLUGIN` and emit `appStateChange` through the real
+  `AppLifecycleService`; mock Phaser only through `PHASER_GAME_FACTORY` and HTTP
+  only at `HttpTestingController`.
+- A protected 401 must retain the player-owned match envelope, invalidate auth,
+  and navigate once to the safe `/play` recovery return path. Recreate the
+  injector, verify the same identity through `AuthService`, and assert the exact
+  pending payload retries automatically. Verify another identity and explicit
+  logout as destructive cases.
+- Focused client command: `npm test -- --include src/app/session-restoration.integration.spec.ts`.
+  Full client gates: `npm test -- --no-progress`, `npm run lint`, and
+  `npm run build`. Focused API command:
+  `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~ResultsEndpointTests`.
 
 ### 6.2 Testing deterministic match rules
 
@@ -131,7 +149,10 @@ verified locations, commands, fixtures, and reference tests.
 
 ### 6.6 Per-rollout-phase notes
 
-- TBD — each completed rollout phase appends concise lessons here.
+- Phase 1 — Persisted storage plus Angular injector recreation gives the stable
+  cold-bootstrap seam. Compare deterministic future behavior after hydration,
+  keep background time paused, preserve one exact pending result until API
+  success, and test 401 recovery as a single-flight identity transition.
 
 ## 7. What We Deliberately Don't Test
 

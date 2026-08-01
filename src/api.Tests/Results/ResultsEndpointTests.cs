@@ -4,8 +4,10 @@ using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using frontLineApi.Contracts.Auth;
 using frontLineApi.Contracts.Results;
+using frontLineApi.Data;
 using frontLineApi.Email;
 using frontLineApi.Tests.Auth;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -22,6 +24,56 @@ public sealed class ResultsEndpointTests
         var response = await client.PostAsJsonAsync("/api/results", CreateValidRequest());
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("not-a-jwt")]
+    [InlineData("header.payload.signature")]
+    public async Task SaveCompletedResultRejectsMalformedCredential(string token)
+    {
+        await using var factory = new AuthWebApplicationFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync("/api/results", CreateValidRequest());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertNoResultWasSavedAsync(factory);
+    }
+
+    [Fact]
+    public async Task SaveCompletedResultRejectsExpiredCredential()
+    {
+        await using var factory = new AuthWebApplicationFactory();
+        using var client = factory.CreateClient();
+        var token = TestJwtFactory.Create(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddMinutes(-10),
+            DateTimeOffset.UtcNow.AddMinutes(-5));
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync("/api/results", CreateValidRequest());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertNoResultWasSavedAsync(factory);
+    }
+
+    [Fact]
+    public async Task SaveCompletedResultRejectsCredentialWithInvalidSignature()
+    {
+        await using var factory = new AuthWebApplicationFactory();
+        using var client = factory.CreateClient();
+        var token = TestJwtFactory.Create(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddMinutes(-1),
+            DateTimeOffset.UtcNow.AddMinutes(5),
+            "different-test-signing-key-with-enough-entropy-for-hmac");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync("/api/results", CreateValidRequest());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertNoResultWasSavedAsync(factory);
     }
 
     [Fact]
@@ -139,5 +191,12 @@ public sealed class ResultsEndpointTests
 
         Assert.True(match.Success, "Expected captured email body to contain an eight-character alphanumeric code.");
         return match.Value;
+    }
+
+    private static async Task AssertNoResultWasSavedAsync(AuthWebApplicationFactory factory)
+    {
+        using var scope = factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<FrontLineDbContext>();
+        Assert.Equal(0, await database.MatchResults.CountAsync());
     }
 }
