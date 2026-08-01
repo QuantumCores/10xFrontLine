@@ -504,17 +504,17 @@ This introduces the first match-session schema at version 1 and does not modify 
 
 #### Automated
 
-- [x] 2.1 Lifecycle adapter specs pass from `src/mbl`: `npm test -- --include src/app/core/lifecycle/app-lifecycle.service.spec.ts`
-- [x] 2.2 Phaser host and play-page restoration specs pass from `src/mbl`: `npm test -- --include src/app/play/phaser-game.component.spec.ts --include src/app/play/play-page.component.spec.ts`
-- [x] 2.3 Full Angular test suite passes from `src/mbl`: `npm test -- --no-progress`
-- [x] 2.4 Angular lint and production build pass from `src/mbl`: `npm run lint` and `npm run build`
-- [x] 2.5 Capacitor Android sync succeeds from `src/mbl`: `npx cap sync android`
+- [x] 2.1 Lifecycle adapter specs pass from `src/mbl`: `npm test -- --include src/app/core/lifecycle/app-lifecycle.service.spec.ts` — 571ba3f
+- [x] 2.2 Phaser host and play-page restoration specs pass from `src/mbl`: `npm test -- --include src/app/play/phaser-game.component.spec.ts --include src/app/play/play-page.component.spec.ts` — 571ba3f
+- [x] 2.3 Full Angular test suite passes from `src/mbl`: `npm test -- --no-progress` — 571ba3f
+- [x] 2.4 Angular lint and production build pass from `src/mbl`: `npm run lint` and `npm run build` — 571ba3f
+- [x] 2.5 Capacitor Android sync succeeds from `src/mbl`: `npx cap sync android` — 571ba3f
 
 #### Manual
 
-- [x] 2.6 Browser refresh during an active match restores the same paused match and stable match ID
-- [x] 2.7 Android background/foreground smoke check resumes without elapsed-time catch-up or duplicated Phaser instances
-- [x] 2.8 Existing portrait layout, touch alignment, and match feedback remain unchanged
+- [x] 2.6 Browser refresh during an active match restores the same paused match and stable match ID — 571ba3f
+- [x] 2.7 Android background/foreground smoke check resumes without elapsed-time catch-up or duplicated Phaser instances — 571ba3f
+- [x] 2.8 Existing portrait layout, touch alignment, and match feedback remain unchanged — 571ba3f
 
 ### Phase 3: Pending Result and Credential Recovery
 
