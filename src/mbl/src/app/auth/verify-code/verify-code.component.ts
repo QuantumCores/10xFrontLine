@@ -3,6 +3,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { normalizeInternalReturnUrl } from '../../core/auth/auth-recovery.service';
 
 @Component({
   selector: 'app-verify-code',
@@ -25,6 +26,9 @@ export class VerifyCodeComponent {
   });
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly returnUrl = normalizeInternalReturnUrl(
+    this.route.snapshot.queryParamMap.get('returnUrl')
+  );
 
   submit(event: SubmitEvent): void {
     event.preventDefault();
@@ -39,8 +43,7 @@ export class VerifyCodeComponent {
 
     this.authService.verifyCode(this.email.value.trim(), this.code.value.trim()).subscribe({
       next: () => {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/play';
-        void this.router.navigateByUrl(returnUrl);
+        void this.router.navigateByUrl(this.returnUrl);
       },
       error: () => {
         this.errorMessage.set('Invalid or expired sign-in code.');

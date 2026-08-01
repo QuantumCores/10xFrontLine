@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
@@ -33,6 +33,14 @@ describe('VerifyCodeComponent', () => {
         provideRouter([
           { path: 'play', component: TestRouteComponent }
         ]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: convertToParamMap({ email: 'player@example.com', returnUrl: '/play' })
+            }
+          }
+        },
         { provide: AuthService, useValue: authService }
       ]
     }).compileComponents();
@@ -42,6 +50,7 @@ describe('VerifyCodeComponent', () => {
   });
 
   it('verifies a code when the native form submit event fires', () => {
+    const navigateByUrl = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const inputs = fixture.nativeElement.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
     inputs[0].value = 'player@example.com';
     inputs[0].dispatchEvent(new Event('input'));
@@ -55,5 +64,7 @@ describe('VerifyCodeComponent', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(authService.verifyCode).toHaveBeenCalledWith('player@example.com', '123456');
+    expect(navigateByUrl).toHaveBeenCalledOnce();
+    expect(navigateByUrl).toHaveBeenCalledWith('/play');
   });
 });

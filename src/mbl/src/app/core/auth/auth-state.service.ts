@@ -29,8 +29,17 @@ export class AuthStateService {
   }
 
   logout(): void {
-    this.tokenStorage.clear();
-    this.sessionSignal.set(null);
+    this.invalidateCredentials();
+  }
+
+  invalidateCredentials(): void {
+    try {
+      this.tokenStorage.clear();
+    } catch {
+      // In-memory credentials must still be invalidated when storage is unavailable.
+    } finally {
+      this.sessionSignal.set(null);
+    }
   }
 
   private validSession(): AuthSession | null {

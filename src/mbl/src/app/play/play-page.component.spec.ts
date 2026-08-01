@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import type Phaser from 'phaser';
@@ -12,7 +13,7 @@ import {
   MATCH_SESSION_STORAGE_KEY,
   MatchSessionStore
 } from '../core/session/match-session.store';
-import type { ActiveMatchSession } from '../core/session/match-session.types';
+import type { ActiveMatchSession, PendingResultMatchSession } from '../core/session/match-session.types';
 import { PersistentMemoryStorage } from '../../testing/persistent-memory-storage';
 import { CHECKPOINT_INTERVAL_MS, isPeriodicCheckpointDue } from './match-checkpoint-policy';
 import { MatchEngine } from './match-engine';
@@ -134,11 +135,45 @@ describe('PlayPageComponent', () => {
     expect(resultsApi.saveCompletedResult).toHaveBeenCalledTimes(1);
     expect(resultsApi.saveCompletedResult).toHaveBeenCalledWith(expect.objectContaining({
       outcome: 'Victory',
+      clientMatchId: 'match-stable-1',
       durationSeconds: 90,
       completedAt: '2026-07-07T10:00:00.000Z',
       finalScore: 12,
       finalFrontlinePosition: 100
     }));
+    expect(storage.inspect(MATCH_SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it('persists completion before saving and automatically retries the identical payload after remount', () => {
+    vi.mocked(resultsApi.saveCompletedResult).mockReturnValueOnce(throwError(() => new Error('offline')));
+
+    onComplete?.(completedSummary());
+    const firstPayload = vi.mocked(resultsApi.saveCompletedResult).mock.calls[0][0];
+    expect(readPendingSession().state.request).toEqual(firstPayload);
+
+    fixture.destroy();
+    vi.mocked(resultsApi.saveCompletedResult).mockImplementation((request) => successfulSave(request));
+    fixture = createFixture();
+
+    const retriedPayload = vi.mocked(resultsApi.saveCompletedResult).mock.calls[1][0];
+    expect(retriedPayload).toEqual(firstPayload);
+    expect(retriedPayload.clientMatchId).toBe('match-stable-1');
+    expect(createGame).toHaveBeenCalledOnce();
+    expect(storage.inspect(MATCH_SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it('retains a pending result on 401 without offering generic retry', () => {
+    vi.mocked(resultsApi.saveCompletedResult).mockReturnValueOnce(throwError(() => new HttpErrorResponse({
+      status: 401,
+      statusText: 'Unauthorized'
+    })));
+
+    onComplete?.(completedSummary());
+    fixture.detectChanges();
+
+    expect(readPendingSession().state.request.clientMatchId).toBe('match-stable-1');
+    expect(fixture.nativeElement.querySelector('.save-status')?.textContent).toContain('Sign in again');
+    expect(fixture.nativeElement.querySelector('.save-status button')).toBeNull();
   });
 
   it('does not start a duplicate save while the first completion is saving', () => {
@@ -203,6 +238,15 @@ describe('PlayPageComponent', () => {
     const session = JSON.parse(storage.inspect(MATCH_SESSION_STORAGE_KEY)!) as ActiveMatchSession;
     if (session.state.kind !== 'active') {
       throw new Error('Expected an active match session.');
+    }
+
+    return session;
+  }
+
+  function readPendingSession(): PendingResultMatchSession {
+    const session = JSON.parse(storage.inspect(MATCH_SESSION_STORAGE_KEY)!) as PendingResultMatchSession;
+    if (session.state.kind !== 'pending-result') {
+      throw new Error('Expected a pending-result match session.');
     }
 
     return session;

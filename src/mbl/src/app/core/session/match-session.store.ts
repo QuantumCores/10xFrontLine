@@ -22,6 +22,10 @@ export const MATCH_SESSION_STORAGE = new InjectionToken<StorageLike | null>('MAT
 export class MatchSessionStore {
   private readonly storage = inject(MATCH_SESSION_STORAGE);
 
+  readOwnerPlayerId(): string | null {
+    return this.readStoredSession()?.ownerPlayerId ?? null;
+  }
+
   readForPlayer(ownerPlayerId: string): MatchSessionEnvelope | null {
     const session = this.readStoredSession();
     return session?.ownerPlayerId === ownerPlayerId ? structuredClone(session) : null;

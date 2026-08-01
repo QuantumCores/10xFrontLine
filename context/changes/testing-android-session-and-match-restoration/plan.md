@@ -520,16 +520,16 @@ This introduces the first match-session schema at version 1 and does not modify 
 
 #### Automated
 
-- [ ] 3.1 Auth recovery and interceptor specs pass from `src/mbl`: `npm test -- --include src/app/core/auth/auth-recovery.service.spec.ts --include src/app/core/auth/auth.interceptor.spec.ts`
-- [ ] 3.2 Pending-result play-page specs pass from `src/mbl`: `npm test -- --include src/app/play/play-page.component.spec.ts`
-- [ ] 3.3 Auth component and service regression specs pass from `src/mbl`: `npm test -- --include src/app/core/auth/auth.service.spec.ts --include src/app/auth/sign-in/sign-in.component.spec.ts --include src/app/auth/verify-code/verify-code.component.spec.ts`
-- [ ] 3.4 Full Angular test suite, lint, and production build pass from `src/mbl`: `npm test -- --no-progress`, `npm run lint`, and `npm run build`
+- [x] 3.1 Auth recovery and interceptor specs pass from `src/mbl`: `npm test -- --include src/app/core/auth/auth-recovery.service.spec.ts --include src/app/core/auth/auth.interceptor.spec.ts`
+- [x] 3.2 Pending-result play-page specs pass from `src/mbl`: `npm test -- --include src/app/play/play-page.component.spec.ts`
+- [x] 3.3 Auth component and service regression specs pass from `src/mbl`: `npm test -- --include src/app/core/auth/auth.service.spec.ts --include src/app/auth/sign-in/sign-in.component.spec.ts --include src/app/auth/verify-code/verify-code.component.spec.ts`
+- [x] 3.4 Full Angular test suite, lint, and production build pass from `src/mbl`: `npm test -- --no-progress`, `npm run lint`, and `npm run build`
 
 #### Manual
 
-- [ ] 3.5 A forced result-save 401 preserves the active or pending match and opens only one sign-in flow
-- [ ] 3.6 Reauthenticating as the same player returns to `/play` and automatically resumes or retries the preserved work
-- [ ] 3.7 Reauthenticating as another player and explicitly signing out each remove the previous player's active and pending match state
+- [x] 3.5 A forced result-save 401 preserves the active or pending match and opens only one sign-in flow
+- [x] 3.6 Reauthenticating as the same player returns to `/play` and automatically resumes or retries the preserved work
+- [x] 3.7 Reauthenticating as another player and explicitly signing out each remove the previous player's active and pending match state
 
 ### Phase 4: Risk-Focused Contract Verification and Handoff
 

@@ -3,6 +3,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { normalizeInternalReturnUrl } from '../../core/auth/auth-recovery.service';
 
 @Component({
   selector: 'app-sign-in',
@@ -21,6 +22,9 @@ export class SignInComponent {
   });
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly returnUrl = normalizeInternalReturnUrl(
+    this.route.snapshot.queryParamMap.get('returnUrl')
+  );
 
   submit(event: SubmitEvent): void {
     event.preventDefault();
@@ -30,8 +34,6 @@ export class SignInComponent {
     }
 
     const email = this.email.value.trim();
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-
     this.submitting.set(true);
     this.errorMessage.set(null);
 
@@ -40,7 +42,7 @@ export class SignInComponent {
         void this.router.navigate(['/verify-code'], {
           queryParams: {
             email,
-            ...(returnUrl ? { returnUrl } : {})
+            returnUrl: this.returnUrl
           }
         });
       },

@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, InjectionToken, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription, take } from 'rxjs';
@@ -12,7 +13,7 @@ import { CompletedMatchSummary, MatchEngineCheckpoint } from './match-types';
 import { PhaserGameComponent } from './phaser-game.component';
 import { createCompletedResultRequest } from './match-result-mapper';
 
-type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
+type SaveState = 'idle' | 'saving' | 'saved' | 'failed' | 'reauthenticating';
 
 export const MATCH_ID_FACTORY = new InjectionToken<() => string>('MATCH_ID_FACTORY', {
   providedIn: 'root',
@@ -53,6 +54,8 @@ export class PlayPageComponent implements OnInit, OnDestroy {
         return `Saved result ${this.savedClientMatchId() ?? this.resultPayload()?.clientMatchId ?? ''}`.trim();
       case 'failed':
         return 'Result save failed. Retry when the API is reachable.';
+      case 'reauthenticating':
+        return 'Sign in again to resume saving this result.';
       default:
         return null;
     }
@@ -70,6 +73,9 @@ export class PlayPageComponent implements OnInit, OnDestroy {
     if (restored?.state.kind === 'active') {
       this.clientMatchId = restored.clientMatchId;
       this.latestCheckpoint = restored.state.checkpoint;
+    } else if (restored?.state.kind === 'pending-result') {
+      this.clientMatchId = restored.clientMatchId;
+      this.resultPayload.set(restored.state.request);
     } else if (!restored) {
       this.clientMatchId = this.createMatchId();
       this.latestCheckpoint = new MatchEngine().getCheckpoint();
@@ -81,6 +87,11 @@ export class PlayPageComponent implements OnInit, OnDestroy {
     this.lifecycleSubscription.add(
       this.lifecycle.background$.subscribe(() => this.flushLatestCheckpoint())
     );
+
+    const pendingResult = this.resultPayload();
+    if (pendingResult) {
+      this.saveCompletedResult(pendingResult);
+    }
   }
 
   ngOnDestroy(): void {
@@ -97,12 +108,20 @@ export class PlayPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload = createCompletedResultRequest(summary);
+    if (!this.ownerPlayerId || !this.clientMatchId) {
+      return;
+    }
+
+    const payload = createCompletedResultRequest(summary, { clientMatchId: this.clientMatchId });
     this.resultPayload.set(payload);
-    this.saveCompletedResult(payload);
+    this.promoteAndSave(payload);
   }
 
   handleMatchCheckpoint(checkpoint: MatchEngineCheckpoint): void {
+    if (this.resultPayload()) {
+      return;
+    }
+
     this.latestCheckpoint = checkpoint;
     this.persistCheckpoint(checkpoint);
   }
@@ -113,6 +132,21 @@ export class PlayPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.promoteAndSave(payload);
+  }
+
+  private promoteAndSave(payload: CompletedResultRequest): void {
+    if (!this.ownerPlayerId || !this.clientMatchId || !this.matchSessions.promoteToPending({
+      ownerPlayerId: this.ownerPlayerId,
+      clientMatchId: this.clientMatchId,
+      checkpointedAt: new Date().toISOString(),
+      request: payload
+    })) {
+      this.saveState.set('failed');
+      return;
+    }
+
+    this.latestCheckpoint = null;
     this.saveCompletedResult(payload);
   }
 
@@ -122,11 +156,16 @@ export class PlayPageComponent implements OnInit, OnDestroy {
 
     this.resultsApi.saveCompletedResult(payload).pipe(take(1)).subscribe({
       next: (response) => {
+        if (this.ownerPlayerId) {
+          this.matchSessions.confirmPending(this.ownerPlayerId, payload.clientMatchId);
+        }
         this.savedClientMatchId.set(response.clientMatchId);
         this.saveState.set('saved');
       },
-      error: () => {
-        this.saveState.set('failed');
+      error: (error: unknown) => {
+        this.saveState.set(
+          error instanceof HttpErrorResponse && error.status === 401 ? 'reauthenticating' : 'failed'
+        );
       }
     });
   }

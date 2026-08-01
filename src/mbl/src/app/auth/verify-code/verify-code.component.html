@@ -35,6 +35,6 @@
       </button>
     </form>
 
-    <a routerLink="/sign-in">Request another code</a>
+    <a routerLink="/sign-in" [queryParams]="{ returnUrl }">Request another code</a>
   </section>
 </main>

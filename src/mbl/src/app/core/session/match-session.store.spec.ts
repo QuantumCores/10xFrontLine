@@ -40,6 +40,7 @@ describe('MatchSessionStore', () => {
       checkpointedAt: '2026-07-30T10:00:00.000Z',
       state: { kind: 'active', checkpoint }
     });
+    expect(recreatedStore.readOwnerPlayerId()).toBe('player-1');
     expect(recreatedStore.readForPlayer('player-2')).toBeNull();
     expect(storage.inspect(MATCH_SESSION_STORAGE_KEY)).not.toBeNull();
   });
