@@ -1,7 +1,7 @@
 ---
 change_id: testing-android-session-and-match-restoration
 title: Test Android session and match restoration
-status: implementing
+status: implemented
 created: 2026-07-26
 updated: 2026-08-01
 archived_at: null

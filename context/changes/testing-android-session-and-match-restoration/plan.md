@@ -535,16 +535,16 @@ This introduces the first match-session schema at version 1 and does not modify 
 
 #### Automated
 
-- [x] 4.1 Cold-bootstrap restoration integration spec passes from `src/mbl`: `npm test -- --include src/app/session-restoration.integration.spec.ts`
-- [x] 4.2 Full Angular tests, lint, and production build pass from `src/mbl`: `npm test -- --no-progress`, `npm run lint`, and `npm run build`
-- [x] 4.3 Results credential contract tests pass: `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~ResultsEndpointTests`
-- [x] 4.4 Full API test suite and build pass: `dotnet test src/api/frontLineApi.slnx` and `dotnet build src/api/frontLineApi.slnx`
-- [x] 4.5 Capacitor Android sync succeeds from `src/mbl`: `npx cap sync android`
-- [x] 4.6 Test-plan Phase 1 cookbook no longer contains its restoration placeholder
+- [x] 4.1 Cold-bootstrap restoration integration spec passes from `src/mbl`: `npm test -- --include src/app/session-restoration.integration.spec.ts` — f3c864b
+- [x] 4.2 Full Angular tests, lint, and production build pass from `src/mbl`: `npm test -- --no-progress`, `npm run lint`, and `npm run build` — f3c864b
+- [x] 4.3 Results credential contract tests pass: `dotnet test src/api/frontLineApi.slnx --filter FullyQualifiedName~ResultsEndpointTests` — f3c864b
+- [x] 4.4 Full API test suite and build pass: `dotnet test src/api/frontLineApi.slnx` and `dotnet build src/api/frontLineApi.slnx` — f3c864b
+- [x] 4.5 Capacitor Android sync succeeds from `src/mbl`: `npx cap sync android` — f3c864b
+- [x] 4.6 Test-plan Phase 1 cookbook no longer contains its restoration placeholder — f3c864b
 
 #### Manual
 
-- [x] 4.7 Android process recreation restores an active paused match for the same player without another match being created
-- [x] 4.8 Android process recreation restores and submits the exact pending completed-result payload once connectivity and valid credentials are available
-- [x] 4.9 A forced 401 opens one reauthentication flow; same-player verification resumes, while different-player verification and explicit logout delete prior match state
-- [x] 4.10 `android-verification.md` records the environment, steps, outcomes, and any limitations truthfully
+- [x] 4.7 Android process recreation restores an active paused match for the same player without another match being created — f3c864b
+- [x] 4.8 Android process recreation restores and submits the exact pending completed-result payload once connectivity and valid credentials are available — f3c864b
+- [x] 4.9 A forced 401 opens one reauthentication flow; same-player verification resumes, while different-player verification and explicit logout delete prior match state — f3c864b
+- [x] 4.10 `android-verification.md` records the environment, steps, outcomes, and any limitations truthfully — f3c864b
