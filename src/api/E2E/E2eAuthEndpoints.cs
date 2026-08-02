@@ -17,6 +17,8 @@ public static partial class E2eAuthEndpoints
 
     public static IEndpointRouteBuilder MapE2eAuthEndpoints(this IEndpointRouteBuilder endpoints)
     {
+        endpoints.MapGet("/api/e2e/health", () => HttpResults.Ok());
+
         endpoints.MapPost(
             "/api/e2e/auth/login-code",
             (E2eLoginCodeRequest request,

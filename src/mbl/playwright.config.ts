@@ -13,6 +13,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  testIgnore: '**/seed.spec.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -69,9 +70,23 @@ export default defineConfig({
     // },
   ],
 
-  webServer: {
-    command: 'node ./node_modules/@angular/cli/bin/ng.js serve --host 127.0.0.1 --port 4200',
-    url: 'http://127.0.0.1:4200',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command:
+        'dotnet run --project ../api/frontLineApi.csproj --no-launch-profile --urls http://127.0.0.1:5178',
+      url: 'http://127.0.0.1:5178/api/e2e/health',
+      reuseExistingServer: !process.env.CI,
+      env: {
+        ASPNETCORE_ENVIRONMENT: 'E2E',
+        Cors__AllowedOrigins__0: 'http://127.0.0.1:4200',
+        E2E__AccessKey: 'frontline-e2e-access-key-2026-abcdefghijklmno',
+        E2E__InMemoryDatabaseName: 'FrontLinePlaywright',
+      },
+    },
+    {
+      command: 'node ./node_modules/@angular/cli/bin/ng.js serve --host 127.0.0.1 --port 4200',
+      url: 'http://127.0.0.1:4200',
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });
