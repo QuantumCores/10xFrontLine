@@ -5,6 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:smoke": "node tools/build-target.mjs smoke",
+    "build:android": "node tools/build-target.mjs android",
     "watch": "ng build --watch --configuration development",
     "lint": "ng lint",
     "test": "ng test",

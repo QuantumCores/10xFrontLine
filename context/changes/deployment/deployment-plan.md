@@ -390,14 +390,14 @@ Accepted MVP limitation: local VPS backups and manual workstation copies are les
 
 ### Phase 4 — Prepare the API for Production
 
-- [ ] Add `GET /health/live` for process health and `GET /health/ready` for SQL Server connectivity. Return minimal status data and no exception details.
-- [ ] Add structured logging, correlation IDs, trusted forwarded-header handling, production error handling, and explicit CORS origins. Nginx owns public HTTP-to-HTTPS redirects; make the application's current unconditional `UseHttpsRedirection()` conditional so Track A can serve HTTP without redirecting to unavailable TLS.
-- [ ] Add a Gmail-backed email sender behind an application-owned interface. Use authenticated SMTP with STARTTLS; configure the server, port, username, App Password, and sender through environment variables.
-- [ ] Handle Gmail timeout, authentication failure, throttling, and rejection. Authentication endpoints must return a generic response that does not reveal whether an account exists.
-- [ ] Add bounded retries only for transient SMTP errors. Never log login codes, App Passwords, message bodies, or complete recipient addresses.
-- [ ] Add EF Core migrations and produce a migration bundle during CI. Migrations must remain backward-compatible with the previous API release.
-- [ ] Implement target-aware client API configuration; changing `/etc/frontline/api.env` cannot change the compiled Angular bundle. Keep local development on `http://localhost:5178/api`, use `http://<VPS_IP>/api` for the temporary browser test build, and use `https://api.<DOMAIN>/api` for the Android production build. Do not set Capacitor `server.url` to the API.
-- [ ] From the repository root on Windows, verify the release build:
+- [x] Add `GET /health/live` for process health and `GET /health/ready` for SQL Server connectivity. Return minimal status data and no exception details.
+- [x] Add structured logging, correlation IDs, trusted forwarded-header handling, production error handling, and explicit CORS origins. Nginx owns public HTTP-to-HTTPS redirects; make the application's current unconditional `UseHttpsRedirection()` conditional so Track A can serve HTTP without redirecting to unavailable TLS.
+- [x] Add a Gmail-backed email sender behind an application-owned interface. Use authenticated SMTP with STARTTLS; configure the server, port, username, App Password, and sender through environment variables.
+- [x] Handle Gmail timeout, authentication failure, throttling, and rejection. Authentication endpoints must return a generic response that does not reveal whether an account exists.
+- [x] Add bounded retries only for transient SMTP errors. Never log login codes, App Passwords, message bodies, or complete recipient addresses.
+- [x] Add EF Core migrations and produce a migration bundle during CI. Migrations must remain backward-compatible with the previous API release.
+- [x] Implement target-aware client API configuration; changing `/etc/frontline/api.env` cannot change the compiled Angular bundle. Keep local development on `http://localhost:5178/api`, use `http://<VPS_IP>/api` for the temporary browser test build, and use `https://api.<DOMAIN>/api` for the Android production build. Do not set Capacitor `server.url` to the API.
+- [x] From the repository root on Windows, verify the release build:
 
 ```powershell
 dotnet restore src/api/frontLineApi.csproj

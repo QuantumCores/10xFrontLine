@@ -18,8 +18,6 @@ public sealed class PasswordlessAuthService(
     IEmailSender emailSender,
     IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<PasswordlessOptions> passwordlessOptions,
-    ILogger<PasswordlessAuthService> logger,
-    IHostEnvironment hostEnvironment,
     TimeProvider timeProvider) : IPasswordlessAuthService
 {
     private const string SigningKeyId = "frontline-auth";
@@ -49,11 +47,6 @@ public sealed class PasswordlessAuthService(
 
         var code = GenerateCode();
         var codeSalt = CreateSalt();
-        if (hostEnvironment.IsDevelopment())
-        {
-            logger.LogWarning("Development sign-in code for {Email}: {Code}", email, code);
-        }
-
         var loginCode = new PasswordlessLoginCode
         {
             Player = player,

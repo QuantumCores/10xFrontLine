@@ -36,11 +36,24 @@ jobs:
       - name: Restore API dependencies
         run: dotnet restore src/api/frontLineApi.slnx
 
+      - name: Restore pinned .NET tools
+        run: dotnet tool restore
+
       - name: Build API
         run: dotnet build src/api/frontLineApi.slnx --configuration Release --no-restore
 
       - name: Test API
         run: dotnet test src/api/frontLineApi.slnx --configuration Release --no-build
+
+      - name: Verify EF model matches migrations
+        run: dotnet ef migrations has-pending-model-changes --project src/api/frontLineApi.csproj --startup-project src/api/frontLineApi.csproj --no-build --configuration Release
+
+      - name: Build self-contained EF migration bundle
+        run: |
+          mkdir -p artifacts/migrations
+          dotnet ef migrations bundle --project src/api/frontLineApi.csproj --startup-project src/api/frontLineApi.csproj --configuration Release --self-contained --target-runtime linux-x64 --output artifacts/migrations/frontline-migrate
+          cp src/api/appsettings.json artifacts/migrations/appsettings.json
+          test -x artifacts/migrations/frontline-migrate
 
   angular:
     name: Angular build and tests
